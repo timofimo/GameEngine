@@ -82,6 +82,7 @@
     <ClCompile Include="OBJLoader.cpp" />
     <ClCompile Include="Components\Script\ParentScript.cpp" />
     <ClCompile Include="RenderingEngine.cpp" />
+    <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Transform.cpp" />
@@ -100,6 +101,7 @@
     <ClInclude Include="OBJLoader.h" />
     <ClInclude Include="Components\Script\ParentScript.h" />
     <ClInclude Include="RenderingEngine.h" />
+    <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Transform.h" />

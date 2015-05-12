@@ -1,8 +1,5 @@
 #include "Mesh.h"
 
-OBJLoader Mesh::loader;
-std::map<std::string, Mesh*> Mesh::m_meshes;
-
 Mesh::Mesh(const std::string file, std::vector<Vertex> vertices, std::vector<unsigned int> indices) : m_file(file)
 {
 	m_vertices = vertices;
@@ -34,28 +31,34 @@ Mesh::~Mesh()
 {
 	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &vao);
-
-	m_meshes.erase(m_file);
 }
 
-Mesh* Mesh::loadMesh(std::string file)
+unsigned int Mesh::addComponent(RenderComponent* component)
 {
-	if (m_meshes.find(file) == m_meshes.end())
+	if (std::find(m_components.begin(), m_components.end(), component) == m_components.end())
 	{
-		std::vector<Vertex> vertices;
-		std::vector<unsigned int> indices;
-		loader.loadOBJ(file, vertices, indices);
-		m_meshes[file] = new Mesh(file, vertices, indices);
+		m_components.push_back(component);
 	}
-	m_meshes[file]->m_nPointers++;
-	return m_meshes[file];
+	else
+	{
+		std::cout << m_file.c_str() << " already had a component " << component->getName().c_str() << std::endl;
+	}
+
+	return m_components.size();
 }
 
-void Mesh::release()
+unsigned int Mesh::releaseComponent(RenderComponent* component)
 {
-	m_nPointers--;
-	if (m_nPointers == 0)
-		delete this;
+	std::vector<RenderComponent*>::iterator it = std::find(m_components.begin(), m_components.end(), component);
+	if (it == m_components.end())
+	{
+		std::cout << "You tried to release " << component->getName().c_str() << " from " << m_file.c_str() << ". But it doesn't have a pointer to this component." << std::endl;
+		return m_components.size();
+	}
+
+	m_components.erase(it);
+
+	return m_components.size();
 }
 
 void Mesh::draw()

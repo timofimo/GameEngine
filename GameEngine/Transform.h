@@ -39,8 +39,5 @@ public:
 
 	glm::vec3 forward();
 	glm::vec3 right();
-
-private:
-	void correctRotation();
 };
 

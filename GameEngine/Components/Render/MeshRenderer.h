@@ -2,12 +2,12 @@
 
 /*local includes*/
 #include "RenderComponent.h"
-#include "../Mesh.h"
-#include "../Texture.h"
+#include "../ResourceManager.h"
 
 class MeshRenderer : public RenderComponent
 {
 private:
+	std::string m_meshFile, m_textureFile;
 	Mesh* m_mesh;
 	Texture* m_texture;
 public:

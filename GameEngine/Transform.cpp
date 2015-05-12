@@ -28,7 +28,6 @@ Transform::Transform(const glm::vec3 pos, const glm::vec3 scl, const glm::vec3 r
 	m_pos = pos;
 	m_scl = scl;
 	m_rot = rot;
-	correctRotation();
 	m_qrot = glm::quat(m_rot);
 }
 
@@ -98,13 +97,11 @@ glm::quat& Transform::rotationQ()
 glm::mat4 Transform::modelMatrix()
 {
 	return glm::translate(m_pos) * glm::mat4(m_qrot) * glm::scale(m_scl);
-	//return glm::scale(m_scl) * glm::mat4(m_qrot) * glm::translate(m_pos);
 }
 
 void Transform::setRotation(const glm::vec3 rot)
 {
 	m_rot = rot;
-	correctRotation();
 	m_qrot = glm::quat(rot);
 }
 
@@ -127,21 +124,13 @@ void Transform::resize(const glm::vec3 amount)
 void Transform::rotate(const glm::vec3 amount)
 {
 	m_rot += amount;
-	correctRotation();
 	m_qrot = glm::quat(m_rot);
 }
 
 void Transform::rotate(const glm::quat amount)
 {
-	m_qrot += amount;
+	m_qrot = amount * m_qrot;
 	m_rot = glm::eulerAngles(m_qrot);
-}
-
-void Transform::correctRotation()
-{
-	m_rot.x = fmodf(m_rot.x + glm::pi<float>(), glm::two_pi<float>()) - glm::pi<float>();
-	m_rot.y = fmodf(m_rot.y + glm::pi<float>(), glm::two_pi<float>()) - glm::pi<float>();
-	m_rot.z = fmodf(m_rot.z + glm::pi<float>(), glm::two_pi<float>()) - glm::pi<float>();
 }
 
 glm::vec3 Transform::forward()

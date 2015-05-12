@@ -1,20 +1,18 @@
 #pragma once
 
 /*local includes*/
-#include "OBJLoader.h"
+#include "Components/Render/RenderComponent.h"
+#include "Vertex.h"
 #include "gl/glew.h"
 
 /*utility includes*/
-#include <map>
+#include <vector>
 
 class Mesh
 {
 private:
-	static OBJLoader loader;
-	static std::map<std::string, Mesh*> m_meshes;
-
 	const std::string m_file;
-	unsigned int m_nPointers;
+	std::vector<RenderComponent*> m_components;
 
 	std::vector<Vertex> m_vertices;
 	std::vector<unsigned int> m_indices;
@@ -24,8 +22,8 @@ public:
 	Mesh::Mesh(const std::string file, std::vector<Vertex> vertices, std::vector<unsigned int> indices);
 	~Mesh();
 
-	static Mesh* loadMesh(std::string file);
-	void release();
+	unsigned int addComponent(RenderComponent* component);
+	unsigned int releaseComponent(RenderComponent* component);
 
 	void draw();
 };

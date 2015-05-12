@@ -5,13 +5,15 @@
 
 MeshRenderer::MeshRenderer(std::string name, std::string meshFile, std::string textureFile) : RenderComponent(name)
 {
-	m_mesh = Mesh::loadMesh(meshFile);
-	m_texture = new Texture(textureFile);
+	m_meshFile = meshFile;
+	m_textureFile = textureFile;
+	m_mesh = ResourceManager::getMesh(m_meshFile, this);
+	m_texture = ResourceManager::getTexture(m_textureFile);
 }
 
 MeshRenderer::~MeshRenderer()
 {
-	m_mesh->release();
+	ResourceManager::releaseMesh(m_meshFile, this);
 }
 
 void MeshRenderer::render(Shader* shader)
