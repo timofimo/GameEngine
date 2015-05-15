@@ -149,7 +149,6 @@ Transform GameObject::getWorldTransform()
 		t.position() *= pt.scale();
 		t.scale() *= pt.scale();
 		t.position() = pt.position() + (pt.rotationQ() * t.position());
-		//t.setRotation(t.rotation() + pt.rotation());
 		t.rotate(pt.rotation());
 
 		return t;

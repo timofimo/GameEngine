@@ -4,6 +4,7 @@
 #include "Components/Script/ParentScript.h"
 #include "Components/Script/Camera.h"
 #include "Components/Render/MeshRenderer.h"
+#include "ResourceManager.h"
 
 #define FPS 60.0f
 
@@ -14,47 +15,51 @@ Engine::Engine() : m_mainDisplay(640, 360, "OpenGL Window", false, false), m_sha
 
 	//Camera
 	GameObject* camera = new GameObject("Camera");
-	camera->getLocalTransform().position() = glm::vec3(0.0f, 0.0f, -50.0f);
-	camera->getLocalTransform().setRotation(glm::radians(glm::vec3(0.0f, 90.0f, 0.0f)));
+	camera->getLocalTransform().position() = glm::vec3(-150.0f, 15.0f, 0.0f);
+	camera->getLocalTransform().setRotation(glm::radians(glm::vec3(0.0f, 00.0f, 0.0f)));
 	Camera* camComponent = new Camera();
 	camComponent->setActive();
 	camera->addComponent(camComponent);
 	root.addChild(camera);
 
-	/*//Box
-	GameObject* box = new GameObject("Box");
-	box->getLocalTransform().translate(glm::vec3(0.0f, 0.0f, 0.0f));
-	box->addComponent(new MeshRenderer("BoxRenderer", "res/box.obj", "res/stone.png"));
-	root.addChild(box);
-
-	GameObject* box2 = new GameObject("Box2");
-	box2->getLocalTransform().translate(glm::vec3(1.0f, 2.0f, 0.0f));
-	box2->getLocalTransform().resize(glm::vec3(0.5f, 0.5f, 0.5f));
-	box2->addComponent(new MeshRenderer("BoxRenderer", "res/box.obj", "res/stone.png"));
-	box->addComponent(new ParentScript());
-	box->addChild(box2);*/
-
-	GameObject* lastBox = nullptr;
-	for (int i = 0; i < 100; i++)
+	/*int amount = 20;
+	for (int x = 0; x < amount; x++)
 	{
-		if (lastBox == nullptr)
+		for (int z = 0; z < amount; z++)
 		{
-			std::string name = "Box" + (i - 1);
-			lastBox = new GameObject(name);
-			lastBox->addComponent(new MeshRenderer("BoxRenderer", "res/box.obj", "res/stone.png"));
-			lastBox->addComponent(new ParentScript());
-			root.addChild(lastBox);
-		}
+			std::string name = "Box" + x + z;
+			GameObject* currentBox = new GameObject(name);
+			currentBox->getLocalTransform().translate(glm::vec3(x * 3.0f, 0.0f, z * 3.0f));
 
-		std::string name = "Box" + i;
-		GameObject* currentBox = new GameObject(name);
-		currentBox->getLocalTransform().translate(glm::vec3(2.0f, 2.0f, 0.0f));
-		currentBox->getLocalTransform().resize(glm::vec3(0.99f, 0.99f, 0.99f));
-		currentBox->addComponent(new MeshRenderer("BoxRenderer", "res/box.obj", "res/stone.png"));
-		currentBox->addComponent(new ParentScript());
-		lastBox->addChild(currentBox);
-		lastBox = currentBox;
+			currentBox->addComponent(new MeshRenderer("BoxRenderer", "res/tree.obj", "res/treeTexture.png"));
+			currentBox->addComponent(new ParentScript());
+			root.addChild(currentBox);
+		}
+	}*/
+
+	for (int i = 0; i < 600; i++)
+	{
+		std::string name = "tree" + i;
+		GameObject* currentTree = new GameObject(name);
+		glm::vec3 position = glm::vec3((float)(rand() % 300), 0.0f, (float)(rand() % 300)) - glm::vec3(150.0f, 0.0f, 150.0f);
+		currentTree->getLocalTransform().translate(position);
+		currentTree->getLocalTransform().setRotation(glm::vec3(0.0f, (float)(rand() % 360), 0.0f));
+
+		currentTree->addComponent(new MeshRenderer("TreeRenderer", "res/tree.obj", "res/treeTexture.png"));
+		root.addChild(currentTree);
 	}
+
+	GameObject* terrain = new GameObject("Terrain");
+	terrain->getLocalTransform().scale() = glm::vec3(150.0f, 1.0f, 150.0f);
+	terrain->addComponent(new MeshRenderer("TerrainRenderer", "res/plane.obj", "res/grass.png"));
+	root.addChild(terrain);
+
+	GameObject* dragon = new GameObject("Dragon");
+	dragon->getLocalTransform().translate(glm::vec3(-140.0f, 2.0f, 0.0f));
+	dragon->getLocalTransform().scale() = glm::vec3(2.0f, 2.0f, 2.0f);
+	dragon->getLocalTransform().setRotation(glm::radians(glm::vec3(0.0f, 180.0f, 0.0f)));
+	dragon->addComponent(new MeshRenderer("DragonRenderer", "res/dragonlp.obj", "res/white.png"));
+	root.addChild(dragon);
 
 	run();
 }

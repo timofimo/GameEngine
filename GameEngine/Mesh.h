@@ -25,6 +25,7 @@ public:
 	unsigned int addComponent(RenderComponent* component);
 	unsigned int releaseComponent(RenderComponent* component);
 
+	void bind();
 	void draw();
 };
 

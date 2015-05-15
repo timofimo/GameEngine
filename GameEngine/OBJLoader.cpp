@@ -104,6 +104,11 @@ void OBJLoader::loadOBJ(const std::string obj, std::vector<Vertex>& returnVertic
 			returnVertices.push_back(tempVert);
 		}
 	}
+
+	m_vertexPositions.clear();
+	m_vertexTexCoords.clear();
+	m_vertexNormals.clear();
+	m_indices.clear();
 }
 
 glm::vec3 OBJLoader::loadVec3(std::string line)

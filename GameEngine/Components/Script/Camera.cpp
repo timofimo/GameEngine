@@ -16,13 +16,6 @@ Camera::~Camera()
 
 void Camera::update(float deltaTime)
 {
-	if (counter++ >= 200)
-	{
-		m_parent->getWorldTransform().printRotation();
-		/*glm::vec3 fw = m_parent->getLocalTransform().forward();
-		std::cout << "Forward(" << fw.x << ", " << fw.y << ", " << fw.z << ")" << std::endl;*/
-		//counter = 0;
-	}
 	if (glfwGetKey(Display::getWindow(), GLFW_KEY_UP))
 		m_parent->getLocalTransform().rotate(glm::vec3(1.0f, 0.0f, 0.0f) * deltaTime);
 	if (glfwGetKey(Display::getWindow(), GLFW_KEY_DOWN))

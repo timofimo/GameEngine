@@ -61,6 +61,8 @@ Display::Display(unsigned int width, unsigned int height, const std::string name
 	// enable back face culling
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
+
+	glfwSwapInterval(0);
 }
 
 

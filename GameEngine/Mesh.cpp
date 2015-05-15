@@ -61,6 +61,11 @@ unsigned int Mesh::releaseComponent(RenderComponent* component)
 	return m_components.size();
 }
 
+void Mesh::bind()
+{
+	glBindVertexArray(vao);
+}
+
 void Mesh::draw()
 {
 	glBindVertexArray(vao);
