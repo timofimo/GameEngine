@@ -11,7 +11,7 @@ GameObject::~GameObject()
 {
 	for (unsigned int i = 0; i < m_components.size(); i++)
 	{
-		delete m_components.at(i);
+		if(m_components.at(i)->getComponentType() != GameComponent::RENDER) delete m_components.at(i);
 	}
 	m_components.clear();
 
@@ -22,7 +22,7 @@ GameObject::~GameObject()
 	m_children.clear();
 }
 
-bool GameObject::operator==(GameObject other)
+/*bool GameObject::operator==(GameObject other)
 {
 	return m_name == other.getName();
 }
@@ -31,7 +31,7 @@ GameObject& GameObject::operator=(const GameObject& other)
 {
 	*this = GameObject(other);
 	return *this;
-}
+}*/
 
 void GameObject::start()
 {
@@ -139,24 +139,41 @@ Transform& GameObject::getLocalTransform()
 	return m_localTransform;
 }
 
-Transform GameObject::getWorldTransform()
+Transform& GameObject::getWorldTransform()
 {
 	if (m_parent)
 	{
-		Transform t = m_localTransform;
-		Transform pt(m_parent->getWorldTransform());
+		if (transformChanged())
+		{
+			Transform t = m_localTransform;
+			Transform pt(m_parent->getWorldTransform());
 
-		t.position() *= pt.scale();
-		t.scale() *= pt.scale();
-		t.position() = pt.position() + (pt.rotationQ() * t.position());
-		t.rotate(pt.rotation());
+			t.position() *= pt.scale();
+			t.scale() *= pt.scale();
+			t.position() = pt.position() + (pt.rotationQ() * t.position());
+			t.rotate(pt.rotation());
 
-		return t;
+			return m_worldTransform = t;
+		}
+		else
+		{
+			m_worldTransform.setHasChanged(false);
+			return m_worldTransform;
+		}
 	}
 	else return m_localTransform;
+}
+
+bool GameObject::transformChanged()
+{
+	bool result = m_localTransform.hasChanged();
+	if (m_parent)
+		result |= m_parent->transformChanged();
+	return result;
 }
 
 std::string GameObject::getName()
 {
 	return m_name;
 }
+

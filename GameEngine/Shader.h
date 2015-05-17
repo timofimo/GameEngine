@@ -12,31 +12,20 @@
 
 class Shader
 {
-private:
-	enum ShaderTypes
-	{
-		VERTEX_SHADER,
-		FRAGMENT_SHADER,
-		NUM_SHADERS
-	};
+protected:
+	
 	GLuint m_program;
-	GLuint m_shaders[NUM_SHADERS];
-	GLuint VPMatrixID, modelMatrixID;
-	static Camera* m_activeCamera;
-
+	GLuint VPMatrixID = UINT_MAX;
 public:
-	Shader(const std::string vertexShader, const std::string fragmentShader);
-	~Shader();
+	Shader();
+	virtual ~Shader();
 
-	static void setActiveCamera(Camera* cam);
-	void updateCamera();
+	void updateVPMatrix(glm::mat4& VPMatrix);
 
 	void bind();
 
-	void updateModelMatrix(glm::mat4& modelMatrix);
-
-private:
+protected:
 	std::string loadShader(const std::string file);
-	void checkShader();
+	void checkShader(GLuint* shaders, unsigned int nShaders);
 };
 

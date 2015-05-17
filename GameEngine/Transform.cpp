@@ -13,6 +13,7 @@ Transform::Transform()
 	m_scl = glm::vec3(1.0f, 1.0f, 1.0f);
 	m_rot = glm::vec3();
 	m_qrot = glm::quat(m_rot);
+	m_hasChanged = true;
 }
 
 Transform::Transform(const glm::vec3 pos)
@@ -21,6 +22,7 @@ Transform::Transform(const glm::vec3 pos)
 	m_scl = glm::vec3(1.0f, 1.0f, 1.0f);
 	m_rot = glm::vec3();
 	m_qrot = glm::quat(m_rot);
+	m_hasChanged = true;
 }
 
 Transform::Transform(const glm::vec3 pos, const glm::vec3 scl, const glm::vec3 rot)
@@ -29,6 +31,7 @@ Transform::Transform(const glm::vec3 pos, const glm::vec3 scl, const glm::vec3 r
 	m_scl = scl;
 	m_rot = rot;
 	m_qrot = glm::quat(m_rot);
+	m_hasChanged = true;
 }
 
 
@@ -36,7 +39,7 @@ Transform::~Transform()
 {
 }
 
-Transform Transform::operator+(Transform other)
+/*Transform Transform::operator+(Transform other)
 {
 	Transform temp(*this);
 	temp.translate(other.position());
@@ -51,7 +54,7 @@ Transform& Transform::operator+=(Transform other)
 	resize(other.scale());
 	rotate(other.rotationQ());
 	return *this;
-}
+}*/
 
 void Transform::printPosition()
 {
@@ -96,39 +99,48 @@ glm::quat& Transform::rotationQ()
 
 glm::mat4 Transform::modelMatrix()
 {
-	return glm::translate(m_pos) * glm::mat4(m_qrot) * glm::scale(m_scl);
+	if (m_hasChanged)
+		return m_worldMatrix = glm::translate(m_pos) * glm::mat4(m_qrot) * glm::scale(m_scl);
+	else
+		return m_worldMatrix;
 }
 
 void Transform::setRotation(const glm::vec3 rot)
 {
+	m_hasChanged = true;
 	m_rot = rot;
 	m_qrot = glm::quat(rot);
 }
 
 void Transform::setRotation(const glm::quat rot)
 {
+	m_hasChanged = true;
 	m_qrot = rot;
 	m_rot = glm::eulerAngles(m_qrot);
 }
 
 void Transform::translate(const glm::vec3 amount)
 {
+	m_hasChanged = true;
 	m_pos += amount;
 }
 
 void Transform::resize(const glm::vec3 amount)
 {
+	m_hasChanged = true;
 	m_scl *= amount;
 }
 
 void Transform::rotate(const glm::vec3 amount)
 {
+	m_hasChanged = true;
 	m_rot += amount;
 	m_qrot = glm::quat(m_rot);
 }
 
 void Transform::rotate(const glm::quat amount)
 {
+	m_hasChanged = true;
 	m_qrot = amount * m_qrot;
 	m_rot = glm::eulerAngles(m_qrot);
 }
@@ -145,4 +157,16 @@ glm::vec3 Transform::forward()
 glm::vec3 Transform::right()
 {
 	return glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), forward()));
+}
+
+bool Transform::hasChanged()
+{
+	bool result = m_hasChanged;
+	m_hasChanged = false;
+	return result;
+}
+
+void Transform::setHasChanged(bool changed)
+{
+	m_hasChanged = changed;
 }

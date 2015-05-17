@@ -1,15 +1,17 @@
 #include "Texture.h"
 #define STB_IMAGE_IMPLEMENTATION
 
+std::map<std::string, Texture*> Texture::m_loadedTextures;
+
 /*local includes*/
 #include "stb-master/stb_image.h"
 
 /*utility includes*/
 #include <windows.h>
 
-Texture::Texture(const std::string file, int forceComponents/* = 0*/)
+Texture::Texture(std::string file) : m_name(file)
 {
-	m_imageData = stbi_load(file.c_str(), &m_width, &m_height, &m_nComponents, forceComponents);
+	m_imageData = stbi_load(file.c_str(), &m_width, &m_height, &m_nComponents, 0);
 	if (!m_imageData)
 	{
 		std::string error = "Failed to load " + file;
@@ -25,17 +27,20 @@ Texture::Texture(const std::string file, int forceComponents/* = 0*/)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.5f);
 
-	int glComponentType = 0;
-	if (m_nComponents == 4)
+	int glComponentType = GL_R;
+	switch (m_nComponents)
+	{
+	case 4:
 		glComponentType = GL_RGBA;
-	else if (m_nComponents == 3)
+		break;
+	case 3:
 		glComponentType = GL_RGB;
-	else if (m_nComponents == 1)
-		glComponentType = GL_R;
-	else if (m_nComponents == 2)
+		break;
+	case 2:
 		glComponentType = GL_RG;
+		break;
+	}
 
 	glTexImage2D(GL_TEXTURE_2D, 0, glComponentType, m_width, m_height, 0, glComponentType, GL_UNSIGNED_BYTE, m_imageData);
 
@@ -44,18 +49,36 @@ Texture::Texture(const std::string file, int forceComponents/* = 0*/)
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	stbi_image_free(m_imageData);
+
+	m_loadedTextures[file] = this;
 }
 
 
 Texture::~Texture()
 {
+	std::map<std::string, Texture*>::iterator it = m_loadedTextures.find(m_name);
+	if (it == m_loadedTextures.end())
+		std::cout << "TEXTURE: " << m_name.c_str() << " This texture is unknown" << std::endl;
+	else
+		m_loadedTextures.erase(it);
+
 	glDeleteTextures(1, m_texture);
 	if (m_texture) delete m_texture; m_texture = nullptr;
 }
 
-GLuint* Texture::getTexture()
+Texture* Texture::getTexture(std::string file)
 {
-	return m_texture;
+	std::map<std::string, Texture*>::iterator it = m_loadedTextures.find(file);
+	Texture* result = nullptr;
+
+	if (it == m_loadedTextures.end())
+	{
+		result = new Texture(file);
+	}
+	else
+		result = it->second;
+
+	return result;
 }
 
 int Texture::getNComponents()
@@ -67,4 +90,10 @@ void Texture::bind(unsigned int unit)
 {
 	glActiveTexture(GL_TEXTURE0 + unit);
 	glBindTexture(GL_TEXTURE_2D, m_texture[0]);
+}
+
+void Texture::unbind(unsigned int unit)
+{
+	glActiveTexture(GL_TEXTURE0 + unit);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }

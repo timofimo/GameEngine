@@ -1,6 +1,9 @@
 #include "Mesh.h"
 
-Mesh::Mesh(const std::string file, std::vector<Vertex> vertices, std::vector<unsigned int> indices) : m_file(file)
+OBJLoader Mesh::m_loader;
+std::map<std::string, Mesh*> Mesh::m_loadedMeshes;
+
+Mesh::Mesh(const std::string file, std::vector<Vertex> vertices, std::vector<unsigned int> indices) : m_name(file)
 {
 	m_vertices = vertices;
 	m_indices = indices;
@@ -23,42 +26,45 @@ Mesh::Mesh(const std::string file, std::vector<Vertex> vertices, std::vector<uns
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * m_indices.size(), &m_indices[0], GL_STATIC_DRAW);
 
+	glGenBuffers(1, &instanceBuffer);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, instanceBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4), NULL, GL_STREAM_DRAW);
+
 	glBindVertexArray(0);
+
+	m_loadedMeshes[file] = this;
 }
 
 
 Mesh::~Mesh()
 {
+	std::map<std::string, Mesh*>::iterator it = m_loadedMeshes.find(m_name);
+	if (it == m_loadedMeshes.end())
+		std::cout << "MESH: " << m_name.c_str() << " This mesh is unknown" << std::endl;
+	else
+		m_loadedMeshes.erase(it);
+
 	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &vao);
 }
 
-unsigned int Mesh::addComponent(RenderComponent* component)
+Mesh* Mesh::getMesh(std::string file)
 {
-	if (std::find(m_components.begin(), m_components.end(), component) == m_components.end())
+	std::map<std::string, Mesh*>::iterator it = m_loadedMeshes.find(file);
+	Mesh* result = nullptr;
+
+	if (it == m_loadedMeshes.end())
 	{
-		m_components.push_back(component);
+		std::vector<Vertex> vertices;
+		std::vector<unsigned int> indices;
+		m_loader.loadOBJ(file, vertices, indices);
+		result = new Mesh(file, vertices, indices);
 	}
 	else
-	{
-		std::cout << m_file.c_str() << " already had a component " << component->getName().c_str() << std::endl;
-	}
+		result = it->second;
 
-	return m_components.size();
-}
-
-unsigned int Mesh::releaseComponent(RenderComponent* component)
-{
-	std::vector<RenderComponent*>::iterator it = std::find(m_components.begin(), m_components.end(), component);
-	if (it == m_components.end())
-	{
-		std::cout << "You tried to release " << component->getName().c_str() << " from " << m_file.c_str() << ". But it doesn't have a pointer to this component." << std::endl;
-		return m_components.size();
-	}
-
-	m_components.erase(it);
-
-	return m_components.size();
+	return result;
 }
 
 void Mesh::bind()
@@ -68,7 +74,34 @@ void Mesh::bind()
 
 void Mesh::draw()
 {
-	glBindVertexArray(vao);
 	glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, 0);
+}
+
+void Mesh::drawInstanced(std::vector<glm::mat4> instanceData, GLuint attribID)
+{
+	//update instance buffer
+	glBindBuffer(GL_ARRAY_BUFFER, instanceBuffer);
+	glBufferData(GL_ARRAY_BUFFER, instanceData.size() * sizeof(glm::mat4), &instanceData[0][0][0], GL_STREAM_DRAW);
+	for (int i = 0; i < 4; i++)
+	{
+		unsigned int pointer = i * sizeof(glm::vec4);
+		glEnableVertexAttribArray(attribID + i);
+		glVertexAttribPointer(attribID + i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)pointer);
+		glVertexAttribDivisor(attribID + i, 1);//WorldMatrix
+	}
+
+	glVertexAttribDivisor(0, 0);//vertex position
+	glVertexAttribDivisor(1, 0);//texCoord
+	glVertexAttribDivisor(2, 0);//normal
+
+	glDrawElementsInstanced(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, 0, instanceData.size());
+
+	GLuint error = glGetError();
+	if (error != GL_NO_ERROR)
+		std::cout << "Error" << std::endl;
+}
+
+void Mesh::unbind()
+{
 	glBindVertexArray(0);
 }

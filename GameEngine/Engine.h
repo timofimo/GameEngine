@@ -4,12 +4,12 @@
 #include "Display.h"
 #include "Shader.h"
 #include "GameObject.h"
+#include "RenderingEngine.h"
 
 class Engine
 {
 private:
-	Display m_mainDisplay;
-	Shader m_shader;
+	RenderingEngine renderingEngine;
 	GameObject root;
 public:
 	Engine();

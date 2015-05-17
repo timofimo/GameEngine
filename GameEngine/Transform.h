@@ -9,14 +9,16 @@ class Transform
 private:
 	glm::vec3 m_pos, m_scl, m_rot;
 	glm::quat m_qrot;
+	bool m_hasChanged;
+	glm::mat4 m_worldMatrix;
 public:
 	Transform();
 	Transform(const glm::vec3 pos);
 	Transform(const glm::vec3 pos, const glm::vec3 scl, const glm::vec3 rot);
 	~Transform();
 
-	Transform operator+(Transform other);
-	Transform& operator+=(Transform other);
+	//Transform operator+(Transform other);
+	//Transform& operator+=(Transform other);
 
 	void printPosition();
 	void printScale();
@@ -39,5 +41,8 @@ public:
 
 	glm::vec3 forward();
 	glm::vec3 right();
+
+	bool hasChanged();
+	void setHasChanged(bool changed);
 };
 

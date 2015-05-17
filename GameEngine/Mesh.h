@@ -1,31 +1,36 @@
 #pragma once
 
 /*local includes*/
+#include "OBJLoader.h"
 #include "Components/Render/RenderComponent.h"
 #include "Vertex.h"
 #include "gl/glew.h"
 
 /*utility includes*/
 #include <vector>
+#include <map>
 
 class Mesh
 {
 private:
-	const std::string m_file;
-	std::vector<RenderComponent*> m_components;
+	static OBJLoader m_loader; // used to load a mesh from OBJ file
+	static std::map<std::string, Mesh*> m_loadedMeshes; // contains all loaded meshes
+
+	const std::string m_name; // name of the mesh
 
 	std::vector<Vertex> m_vertices;
 	std::vector<unsigned int> m_indices;
 	GLuint vao;
-	GLuint vbo, indexBuffer;
+	GLuint vbo, indexBuffer, instanceBuffer;
 public:
 	Mesh::Mesh(const std::string file, std::vector<Vertex> vertices, std::vector<unsigned int> indices);
 	~Mesh();
 
-	unsigned int addComponent(RenderComponent* component);
-	unsigned int releaseComponent(RenderComponent* component);
+	static Mesh* getMesh(std::string file);
 
 	void bind();
 	void draw();
+	void drawInstanced(std::vector<glm::mat4> instanceData, GLuint attribID);
+	void unbind();
 };
 

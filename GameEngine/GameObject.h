@@ -16,13 +16,13 @@ private:
 	GameObject* m_parent;
 	std::vector<GameObject*> m_children;
 	std::vector<GameComponent*> m_components;
-	Transform m_localTransform;
+	Transform m_localTransform, m_worldTransform;
 public:
 	GameObject(const std::string name);
 	~GameObject();
 
-	bool operator==(GameObject other);
-	GameObject& operator=(const GameObject& other);
+/*	bool operator==(GameObject other);
+	GameObject& operator=(const GameObject& other);*/
 
 	void start();
 	void update(float deltaTime);
@@ -37,7 +37,8 @@ public:
 	void removeComponent(const std::string name);
 
 	Transform& getLocalTransform();
-	Transform getWorldTransform();
+	Transform& getWorldTransform();
+	bool transformChanged();
 
 	std::string getName();
 };

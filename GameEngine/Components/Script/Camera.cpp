@@ -38,7 +38,7 @@ void Camera::update(float deltaTime)
 
 void Camera::setActive()
 {
-	Shader::setActiveCamera(this);
+	//Shader::setActiveCamera(this);
 }
 
 glm::mat4 Camera::getViewMatrix()

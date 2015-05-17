@@ -33,5 +33,5 @@ public:
 	ComponentType getComponentType(){ return m_type; }
 	std::string getName(){ return m_name; }
 
-	void setParent(GameObject* parent){ this->m_parent = parent; }
+	virtual void setParent(GameObject* parent){ this->m_parent = parent; }
 };
