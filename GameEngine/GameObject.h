@@ -21,12 +21,8 @@ public:
 	GameObject(const std::string name);
 	~GameObject();
 
-/*	bool operator==(GameObject other);
-	GameObject& operator=(const GameObject& other);*/
-
 	void start();
 	void update(float deltaTime);
-	void render(Shader* shader);
 
 	void setParent(GameObject* parent);
 
@@ -38,7 +34,7 @@ public:
 
 	Transform& getLocalTransform();
 	Transform& getWorldTransform();
-	bool transformChanged();
+	bool transformChanged(bool reset);
 
 	std::string getName();
 };

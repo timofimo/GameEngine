@@ -6,7 +6,7 @@ std::map<std::string, MeshRenderer*> MeshRenderer::m_meshRenderers;
 #include "../GameObject.h"
 #include "../RenderingEngine.h"
 
-MeshRenderer::MeshRenderer(std::string name, std::string meshFile, std::string textureFile, RenderingEngine* renderingEngine) : RenderComponent(name)
+MeshRenderer::MeshRenderer(std::string name, std::string meshFile, std::string textureFile, RenderingEngine* renderingEngine) : RenderComponent(name, renderingEngine)
 {
 	m_meshFile = meshFile;
 	m_textureFile = textureFile;
@@ -18,7 +18,8 @@ MeshRenderer::MeshRenderer(std::string name, std::string meshFile, std::string t
 
 MeshRenderer::~MeshRenderer()
 {
-	
+	m_mesh->release();
+	m_texture->release();
 }
 
 MeshRenderer* MeshRenderer::getMeshRenderer(std::string meshFile, std::string textureFile, RenderingEngine* renderingEngine, GameObject* parent)
@@ -35,16 +36,6 @@ MeshRenderer* MeshRenderer::getMeshRenderer(std::string meshFile, std::string te
 	return result;
 }
 
-void MeshRenderer::render(Shader* shader)
-{
-	/*shader->updateModelMatrix(m_parents[0]->getWorldTransform().modelMatrix());
-	if (m_texture)
-		m_texture->bind(0);
-	m_mesh->bind();
-	m_mesh->draw();
-	m_mesh->unbind();*/
-}
-
 Mesh* MeshRenderer::getMesh()
 {
 	return m_mesh;
@@ -58,4 +49,32 @@ Texture* MeshRenderer::getTexture()
 std::vector<GameObject*> MeshRenderer::getParents()
 {
 	return m_parents;
+}
+
+bool MeshRenderer::parentsTransformChanged()
+{
+	bool result = false;
+	for each (GameObject* parent in m_parents)
+	{
+		result |= parent->transformChanged(false);
+	}
+	return result;
+}
+
+void MeshRenderer::removeParent(GameObject* parent)
+{
+	std::vector<GameObject*>::iterator it = std::find(m_parents.begin(), m_parents.end(), parent);
+	if (it == m_parents.end())
+	{
+		std::cout << "ERROR RENDERCOMPONENT: " << parent->getName().c_str() << " tried to delete a component that doesn't exist" << std::endl;
+	}
+	else
+	{
+		m_parents.erase(it);
+		if (m_parents.size() <= 0)
+		{
+			m_renderingEngine->removeMeshRenderer(this);
+			delete this;
+		}
+	}
 }

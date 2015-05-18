@@ -26,7 +26,7 @@ void RenderingEngine::renderScene()
 
 	if (!m_activeShader || !m_activeCamera)
 	{
-		std::cout << "There is no active shader or camera" << std::endl;
+		std::cout << "ERROR RNEDERINGENGINE: There is no active shader or camera" << std::endl;
 		return;
 	}
 
@@ -71,6 +71,15 @@ void RenderingEngine::addMeshRenderer(MeshRenderer* meshRenderer)
 	m_meshRenderers.push_back(meshRenderer);
 }
 
+void RenderingEngine::removeMeshRenderer(MeshRenderer* meshRenderer)
+{
+	std::vector<MeshRenderer*>::iterator it = std::find(m_meshRenderers.begin(), m_meshRenderers.end(), meshRenderer);
+	if (it == m_meshRenderers.end())
+		std::cout << "ERROR RENDERINGENGINE: tried to delete a meshrenderer that doesn't exist" << std::endl;
+	else
+		m_meshRenderers.erase(it);
+}
+
 void RenderingEngine::render(MeshRenderer* meshRenderer)
 {
 	SimpleShader* shader = (SimpleShader*)m_shaders[SIMPLE_SHADER];
@@ -88,13 +97,14 @@ void RenderingEngine::renderInstanced(MeshRenderer* meshRenderer)
 	InstanceShader* shader = (InstanceShader*)m_shaders[INSTANCE_SHADER];
 	shader->bind();
 
-	float startTime = glfwGetTime();
 	std::vector<glm::mat4> instanceMatrices;
-	for each (GameObject* parent in meshRenderer->getParents())
+	if (meshRenderer->parentsTransformChanged())
 	{
-		instanceMatrices.push_back(parent->getWorldTransform().modelMatrix());
+		for each (GameObject* parent in meshRenderer->getParents())
+		{
+			instanceMatrices.push_back(parent->getWorldTransform().modelMatrix());
+		}
 	}
-	//std::cout << "instanceMatrices: " << glfwGetTime() - startTime << std::endl;
 
 	meshRenderer->getMesh()->bind();
 	meshRenderer->getTexture()->bind(0);

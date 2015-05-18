@@ -19,7 +19,10 @@ Engine::Engine() : root("Root")
 	camera->addComponent(camComponent);
 	root.addChild(camera);
 
-	for (int i = 0; i < 1000; i++)
+	std::string meshes[] = { "res/chest.obj", "res/coffin.obj", "res/barrel.obj", "res/sack.obj" };
+	std::string textures[] = { "res/chest.png", "res/coffin.png", "res/barrel.png", "res/sack.png" };
+
+	for (int i = 0; i < 12000; i++)
 	{
 		std::string name = "tree" + i;
 		GameObject* currentTree = new GameObject(name);
@@ -27,7 +30,8 @@ Engine::Engine() : root("Root")
 		currentTree->getLocalTransform().translate(position);
 		currentTree->getLocalTransform().setRotation(glm::vec3(0.0f, (float)(rand() % 360), 0.0f));
 
-		currentTree->addComponent(MeshRenderer::getMeshRenderer("res/tree.obj", "res/treeTexture.png", &renderingEngine, currentTree));
+		int r = rand() % 4;
+		currentTree->addComponent(MeshRenderer::getMeshRenderer(meshes[r], textures[r], &renderingEngine, currentTree));
 		root.addChild(currentTree);
 	}
 
@@ -75,10 +79,10 @@ void Engine::run()
 
 		if (unprocessedTime >= frameTime)
 		{
-			float startTime = glfwGetTime();
+			float startTime = (float)glfwGetTime();
 			update(unprocessedTime);
 			//std::cout << "Update: " << glfwGetTime() - startTime << std::endl;
-			startTime = glfwGetTime();
+			startTime = (float)glfwGetTime();
 			render();;
 			//std::cout << "Render: " << glfwGetTime() - startTime << std::endl;
 

@@ -39,23 +39,6 @@ Transform::~Transform()
 {
 }
 
-/*Transform Transform::operator+(Transform other)
-{
-	Transform temp(*this);
-	temp.translate(other.position());
-	temp.resize(other.scale());
-	temp.rotate(other.rotationQ());
-	return temp;
-}
-
-Transform& Transform::operator+=(Transform other)
-{
-	translate(other.position());
-	resize(other.scale());
-	rotate(other.rotationQ());
-	return *this;
-}*/
-
 void Transform::printPosition()
 {
 	std::cout << std::setprecision(3) << "Position(" << m_pos.x << ", " << m_pos.y << ", " << m_pos.z << ")" << std::endl;
@@ -159,10 +142,11 @@ glm::vec3 Transform::right()
 	return glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), forward()));
 }
 
-bool Transform::hasChanged()
+bool Transform::hasChanged(bool reset)
 {
 	bool result = m_hasChanged;
-	m_hasChanged = false;
+	if(reset)
+		m_hasChanged = false;
 	return result;
 }
 

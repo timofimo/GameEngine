@@ -49,7 +49,7 @@ void Shader::checkShader(GLuint* shaders, unsigned int nShaders)
 	GLint succes = 0;
 	GLchar error[1024] = { 0 };
 
-	for (int i = 0; i < nShaders; i++)
+	for (unsigned int i = 0; i < nShaders; i++)
 	{
 		glGetShaderiv(shaders[i], GL_COMPILE_STATUS, &succes);
 

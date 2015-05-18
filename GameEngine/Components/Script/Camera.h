@@ -13,8 +13,6 @@ public:
 
 	void update(float deltaTime);
 
-	void setActive();
-
 	glm::mat4 getViewMatrix();
 	glm::mat4 getProjectionMatrix();
 	glm::mat4 getVPMatrix();

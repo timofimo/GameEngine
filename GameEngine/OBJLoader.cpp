@@ -33,12 +33,6 @@ void OBJLoader::loadOBJ(const std::string obj, std::vector<Vertex>& returnVertic
 			}
 			if (line[0] == 'o')
 			{
-				if (!firstObject)
-				{
-					std::cerr << "This OBJ loader can not load object groups: " << obj << std::endl;
-					break;
-				}
-				firstObject = false;
 				continue;
 			}
 			if (line[0] == 's' && line.substr(2, 3) != "off")
@@ -74,6 +68,7 @@ void OBJLoader::loadOBJ(const std::string obj, std::vector<Vertex>& returnVertic
 				m_indices.insert(m_indices.end(), indices.begin(), indices.end());
 			}
 		}
+		file.close();
 	}
 	else
 	{
@@ -81,41 +76,19 @@ void OBJLoader::loadOBJ(const std::string obj, std::vector<Vertex>& returnVertic
 		return;
 	}
 
-	for (int i = 0; i < m_indices.size(); i += 3)
-	{
-		Vertex tempVert;
-		tempVert.position = m_vertexPositions[m_indices[i]];
-		tempVert.uv = m_vertexTexCoords[m_indices[i + 1]];
-		tempVert.normal = m_vertexNormals[m_indices[i + 2]];
-
-		bool vertexExists = false;
-		for (int vertexIndex = 0; vertexIndex < returnVertices.size(); vertexIndex++)
-		{
-			if (tempVert == returnVertices[vertexIndex])
-			{
-				vertexExists = true;
-				returnIndices.push_back(vertexIndex);
-				break;
-			}
-		}
-		if (!vertexExists)
-		{
-			returnIndices.push_back(returnVertices.size());
-			returnVertices.push_back(tempVert);
-		}
-	}
-
-	m_vertexPositions.clear();
-	m_vertexTexCoords.clear();
-	m_vertexNormals.clear();
-	m_indices.clear();
+	indexModel(returnVertices, returnIndices);
 }
 
 glm::vec3 OBJLoader::loadVec3(std::string line)
 {
 	glm::vec3 result;
-	size_t pos = 0;
-	char nData = 0;
+
+	// delete everything up to the first value
+	line.erase(0, 2);
+	size_t pos = line.find_first_not_of(' ');
+	line.erase(0, pos);
+
+	char nData = 1;
 	while (pos != UINT_MAX)
 	{
 		pos = line.find(' ');
@@ -146,8 +119,13 @@ glm::vec3 OBJLoader::loadVec3(std::string line)
 glm::vec2 OBJLoader::loadVec2(std::string line)
 {
 	glm::vec2 result;
-	size_t pos = 0;
-	char nData = 0;
+
+	// delete everything up to the first value
+	line.erase(0, 2);
+	size_t pos = line.find_first_not_of(' ');
+	line.erase(0, pos);
+
+	char nData = 1;
 	while (pos != UINT_MAX)
 	{
 		pos = line.find(' ');
@@ -157,9 +135,9 @@ glm::vec2 OBJLoader::loadVec2(std::string line)
 			result.x = atof(line.substr(0, pos).c_str());
 			break;
 		case 2:
-			result.y = atof(line.substr(0, pos).c_str());
+			result.y = -atof(line.substr(0, pos).c_str());
 			break;
-		case 4:
+		case 3:
 			std::cerr << "more than 2 components in vec2" << std::endl;
 			break;
 		default:
@@ -202,4 +180,36 @@ std::vector<unsigned int> OBJLoader::loadIndex(std::string line)
 	}
 
 	return indicies;
+}
+
+void OBJLoader::indexModel(std::vector<Vertex>& returnVertices, std::vector<unsigned int>& returnIndices)
+{
+	for (int i = 0; i < m_indices.size(); i += 3)
+	{
+		Vertex tempVert;
+		tempVert.position = m_vertexPositions[m_indices[i]];
+		tempVert.uv = m_vertexTexCoords[m_indices[i + 1]];
+		tempVert.normal = m_vertexNormals[m_indices[i + 2]];
+
+		bool vertexExists = false;
+		for (int vertexIndex = 0; vertexIndex < returnVertices.size(); vertexIndex++)
+		{
+			if (tempVert == returnVertices[vertexIndex])
+			{
+				vertexExists = true;
+				returnIndices.push_back(vertexIndex);
+				break;
+			}
+		}
+		if (!vertexExists)
+		{
+			returnIndices.push_back(returnVertices.size());
+			returnVertices.push_back(tempVert);
+		}
+	}
+
+	m_vertexPositions.clear();
+	m_vertexTexCoords.clear();
+	m_vertexNormals.clear();
+	m_indices.clear();
 }

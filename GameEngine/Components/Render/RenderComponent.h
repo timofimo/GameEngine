@@ -1,5 +1,7 @@
 #pragma once
 
+class RenderingEngine;
+
 /*local includes*/
 #include "../GameComponent.h"
 
@@ -12,16 +14,20 @@ private:
 	GameObject* m_parent;
 protected:
 	std::vector<GameObject*> m_parents;
+	RenderingEngine* m_renderingEngine;
 public:
-	RenderComponent(std::string name) : GameComponent(GameComponent::RENDER, name){}
+	RenderComponent(std::string name, RenderingEngine* renderingEngine) : GameComponent(GameComponent::RENDER, name)
+	{
+		m_renderingEngine = renderingEngine;
+	}
 
 	virtual void start(){}
-	virtual void render(Shader* shader) = 0;
 
 	void addParent(GameObject* parent)
 	{
 		m_parents.push_back(parent);
 	}
+	virtual void removeParent(GameObject* parent) = 0;
 
 private:
 	void update(float deltaTime){}

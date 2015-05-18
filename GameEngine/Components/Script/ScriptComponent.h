@@ -10,7 +10,4 @@ public:
 
 	virtual void start(){}
 	virtual void update(float deltaTime) = 0;
-
-private:
-	void render(Shader* shader){}
 };

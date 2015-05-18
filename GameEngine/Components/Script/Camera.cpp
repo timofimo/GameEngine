@@ -36,11 +36,6 @@ void Camera::update(float deltaTime)
 		m_parent->getLocalTransform().translate(m_parent->getWorldTransform().right() * deltaTime * movementSpeed);
 }
 
-void Camera::setActive()
-{
-	//Shader::setActiveCamera(this);
-}
-
 glm::mat4 Camera::getViewMatrix()
 {
 	return glm::lookAt(m_parent->getWorldTransform().position(), m_parent->getWorldTransform().position() + m_parent->getWorldTransform().forward(), glm::vec3(0.0f, 1.0f, 0.0f));

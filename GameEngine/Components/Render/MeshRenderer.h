@@ -1,7 +1,5 @@
 #pragma once
 
-class RenderingEngine;
-
 /*local includes*/
 #include "RenderComponent.h"
 #include "../Mesh.h"
@@ -27,4 +25,7 @@ public:
 	Texture* getTexture();
 
 	std::vector<GameObject*> getParents();
+	bool parentsTransformChanged();
+
+	void removeParent(GameObject* parent);
 };

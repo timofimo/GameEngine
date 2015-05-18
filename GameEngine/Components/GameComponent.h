@@ -28,7 +28,6 @@ public:
 
 	virtual void start() = 0;
 	virtual void update(float deltaTime) = 0;
-	virtual void render(Shader* shader) = 0;
 
 	ComponentType getComponentType(){ return m_type; }
 	std::string getName(){ return m_name; }

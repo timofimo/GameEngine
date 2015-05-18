@@ -51,6 +51,7 @@ Texture::Texture(std::string file) : m_name(file)
 	stbi_image_free(m_imageData);
 
 	m_loadedTextures[file] = this;
+	m_nReferences = 0;
 }
 
 
@@ -58,12 +59,17 @@ Texture::~Texture()
 {
 	std::map<std::string, Texture*>::iterator it = m_loadedTextures.find(m_name);
 	if (it == m_loadedTextures.end())
-		std::cout << "TEXTURE: " << m_name.c_str() << " This texture is unknown" << std::endl;
+		std::cout << "ERROR TEXTURE: " << m_name.c_str() << " This texture is unknown" << std::endl;
 	else
 		m_loadedTextures.erase(it);
 
 	glDeleteTextures(1, m_texture);
 	if (m_texture) delete m_texture; m_texture = nullptr;
+}
+
+std::string Texture::getName()
+{
+	return m_name;
 }
 
 Texture* Texture::getTexture(std::string file)
@@ -78,7 +84,18 @@ Texture* Texture::getTexture(std::string file)
 	else
 		result = it->second;
 
+	result->increaseReferences();
 	return result;
+}
+
+void Texture::release()
+{
+	m_nReferences--;
+	if (m_nReferences <= 0)
+	{
+		std::cout << "TEXTURE: " << m_name.c_str() << " was deleted" << std::endl;
+		delete this;
+	}
 }
 
 int Texture::getNComponents()
@@ -96,4 +113,9 @@ void Texture::unbind(unsigned int unit)
 {
 	glActiveTexture(GL_TEXTURE0 + unit);
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void Texture::increaseReferences()
+{
+	m_nReferences++;
 }

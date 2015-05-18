@@ -1,5 +1,7 @@
 #include "GameObject.h"
 
+/*local includes*/
+#include "Components/Render/RenderComponent.h"
 
 GameObject::GameObject(const std::string name)
 {
@@ -12,6 +14,7 @@ GameObject::~GameObject()
 	for (unsigned int i = 0; i < m_components.size(); i++)
 	{
 		if(m_components.at(i)->getComponentType() != GameComponent::RENDER) delete m_components.at(i);
+		else ((RenderComponent*)m_components.at(i))->removeParent(this);
 	}
 	m_components.clear();
 
@@ -21,17 +24,6 @@ GameObject::~GameObject()
 	}
 	m_children.clear();
 }
-
-/*bool GameObject::operator==(GameObject other)
-{
-	return m_name == other.getName();
-}
-
-GameObject& GameObject::operator=(const GameObject& other)
-{
-	*this = GameObject(other);
-	return *this;
-}*/
 
 void GameObject::start()
 {
@@ -64,21 +56,6 @@ void GameObject::update(float deltaTime)
 	}
 }
 
-void GameObject::render(Shader* shader)
-{
-	// render object
-	for each (GameComponent* component in m_components)
-	{
-		if (component->getComponentType() == GameComponent::RENDER)
-			component->render(shader);
-	}
-
-	for each (GameObject* object in m_children)
-	{
-		object->render(shader);
-	}
-}
-
 void GameObject::setParent(GameObject* parent)
 {
 	m_parent = parent;
@@ -87,7 +64,7 @@ void GameObject::setParent(GameObject* parent)
 void GameObject::addChild(GameObject* child)
 {
 	if (std::find(m_children.begin(), m_children.end(), child) != m_children.end())
-		std::cout << m_name.c_str() << " already contains object " << child->getName().c_str() << std::endl;
+		std::cout << "ERROR GAMEOBJECT:" << m_name.c_str() << " already contains object " << child->getName().c_str() << std::endl;
 	else
 	{
 		child->setParent(this);
@@ -113,7 +90,7 @@ void GameObject::addComponent(GameComponent* component)
 	{
 		if (c == component)
 		{
-			std::cout << m_name.c_str() << " already contains component " << component->getName().c_str() << std::endl;
+			std::cout << "ERROR GAMEOBJECT: " << m_name.c_str() << " already contains component " << component->getName().c_str() << std::endl;
 			return;
 		}
 	}
@@ -143,7 +120,7 @@ Transform& GameObject::getWorldTransform()
 {
 	if (m_parent)
 	{
-		if (transformChanged())
+		if (transformChanged(true))
 		{
 			Transform t = m_localTransform;
 			Transform pt(m_parent->getWorldTransform());
@@ -164,11 +141,11 @@ Transform& GameObject::getWorldTransform()
 	else return m_localTransform;
 }
 
-bool GameObject::transformChanged()
+bool GameObject::transformChanged(bool reset)
 {
-	bool result = m_localTransform.hasChanged();
+	bool result = m_localTransform.hasChanged(reset);
 	if (m_parent)
-		result |= m_parent->transformChanged();
+		result |= m_parent->transformChanged(reset);
 	return result;
 }
 

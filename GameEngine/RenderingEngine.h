@@ -33,6 +33,7 @@ public:
 	bool windowShouldClose();
 
 	void addMeshRenderer(MeshRenderer* meshRenderer);
+	void removeMeshRenderer(MeshRenderer* meshRenderer);
 
 private:
 	void render(MeshRenderer* meshRenderer);

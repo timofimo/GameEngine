@@ -15,14 +15,21 @@ private:
 	unsigned char* m_imageData;
 	int m_width, m_height, m_nComponents;
 	GLuint* m_texture;
+	unsigned int m_nReferences;
 public:
 	Texture(std::string file);
 	~Texture();
 
+	std::string getName();
 	static Texture* getTexture(std::string file);
+public:
+	void release();
 
 	int getNComponents();
 	void bind(unsigned int unit);
 	void unbind(unsigned int unit);
+
+private:
+	void increaseReferences();
 };
 

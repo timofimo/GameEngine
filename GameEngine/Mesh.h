@@ -22,15 +22,21 @@ private:
 	std::vector<unsigned int> m_indices;
 	GLuint vao;
 	GLuint vbo, indexBuffer, instanceBuffer;
+	unsigned int m_nReferences;
+	unsigned int m_nInstances;
 public:
 	Mesh::Mesh(const std::string file, std::vector<Vertex> vertices, std::vector<unsigned int> indices);
 	~Mesh();
 
+	std::string getName();
 	static Mesh* getMesh(std::string file);
+	void release();
 
 	void bind();
 	void draw();
 	void drawInstanced(std::vector<glm::mat4> instanceData, GLuint attribID);
 	void unbind();
+
+	void increaseReferences();
 };
 

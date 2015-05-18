@@ -17,9 +17,6 @@ public:
 	Transform(const glm::vec3 pos, const glm::vec3 scl, const glm::vec3 rot);
 	~Transform();
 
-	//Transform operator+(Transform other);
-	//Transform& operator+=(Transform other);
-
 	void printPosition();
 	void printScale();
 	void printRotation();
@@ -42,7 +39,7 @@ public:
 	glm::vec3 forward();
 	glm::vec3 right();
 
-	bool hasChanged();
+	bool hasChanged(bool reset);
 	void setHasChanged(bool changed);
 };
 
