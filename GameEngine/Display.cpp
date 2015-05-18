@@ -71,7 +71,7 @@ Display::~Display()
 	glfwTerminate();
 }
 
-bool Display::shouldClose()
+int Display::shouldClose()
 {
 	return glfwWindowShouldClose(m_window);
 }

@@ -17,7 +17,7 @@ public:
 	Display(unsigned int width, unsigned int height, const std::string name, const bool fullscreen = false, const bool useScreenResolution = false);
 	~Display();
 
-	bool shouldClose();
+	int shouldClose();
 	static unsigned int getWidth();
 	static unsigned int getHeight();
 	static GLFWwindow* getWindow();

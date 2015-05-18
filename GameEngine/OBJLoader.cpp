@@ -95,13 +95,13 @@ glm::vec3 OBJLoader::loadVec3(std::string line)
 		switch (nData)
 		{
 		case 1:
-			result.x = atof(line.substr(0, pos).c_str());
+			result.x = (float)atof(line.substr(0, pos).c_str());
 			break;
 		case 2:
-			result.y = atof(line.substr(0, pos).c_str());
+			result.y = (float)atof(line.substr(0, pos).c_str());
 			break;
 		case 3:
-			result.z = atof(line.substr(0, pos).c_str());
+			result.z = (float)atof(line.substr(0, pos).c_str());
 			break;
 		case 4:
 			std::cerr << "more than 3 components in vec3" << std::endl;
@@ -132,10 +132,10 @@ glm::vec2 OBJLoader::loadVec2(std::string line)
 		switch (nData)
 		{
 		case 1:
-			result.x = atof(line.substr(0, pos).c_str());
+			result.x = (float)atof(line.substr(0, pos).c_str());
 			break;
 		case 2:
-			result.y = -atof(line.substr(0, pos).c_str());
+			result.y = -(float)atof(line.substr(0, pos).c_str()); // flips the texture coordinates
 			break;
 		case 3:
 			std::cerr << "more than 2 components in vec2" << std::endl;
@@ -184,7 +184,7 @@ std::vector<unsigned int> OBJLoader::loadIndex(std::string line)
 
 void OBJLoader::indexModel(std::vector<Vertex>& returnVertices, std::vector<unsigned int>& returnIndices)
 {
-	for (int i = 0; i < m_indices.size(); i += 3)
+	for (unsigned int i = 0; i < m_indices.size(); i += 3)
 	{
 		Vertex tempVert;
 		tempVert.position = m_vertexPositions[m_indices[i]];
@@ -192,7 +192,7 @@ void OBJLoader::indexModel(std::vector<Vertex>& returnVertices, std::vector<unsi
 		tempVert.normal = m_vertexNormals[m_indices[i + 2]];
 
 		bool vertexExists = false;
-		for (int vertexIndex = 0; vertexIndex < returnVertices.size(); vertexIndex++)
+		for (unsigned int vertexIndex = 0; vertexIndex < returnVertices.size(); vertexIndex++)
 		{
 			if (tempVert == returnVertices[vertexIndex])
 			{
