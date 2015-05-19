@@ -1,28 +1,21 @@
 #include "Engine.h"
 
-#include "Components/Script/HelloWorld.h"
-#include "Components/Script/ParentScript.h"
-#include "Components/Script/Camera.h"
-#include "Components/Render/MeshRenderer.h"
-#include "ResourceManager.h"
+#include "Components.h"
 
-#define FPS 600.0f
+#define FPS 60.0f
 
 Engine::Engine() : root("Root")
 {
 	//Camera
 	GameObject* camera = new GameObject("Camera");
-	camera->getLocalTransform().position() = glm::vec3(0.0f, 0.0f, 0.0f);
+	camera->getLocalTransform().position() = glm::vec3(0.0f, 10.0f, 0.0f);
 	camera->getLocalTransform().setRotation(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f)));
 	Camera* camComponent = new Camera();
 	renderingEngine.setCamera(camComponent);
 	camera->addComponent(camComponent);
 	root.addChild(camera);
 
-	std::string meshes[] = { "res/chest.obj", "res/coffin.obj", "res/barrel.obj", "res/sack.obj" };
-	std::string textures[] = { "res/chest.png", "res/coffin.png", "res/barrel.png", "res/sack.png" };
-
-	for (int i = 0; i < 12000; i++)
+	for (int i = 0; i < 1200; i++)
 	{
 		std::string name = "tree" + i;
 		GameObject* currentTree = new GameObject(name);
@@ -30,8 +23,8 @@ Engine::Engine() : root("Root")
 		currentTree->getLocalTransform().translate(position);
 		currentTree->getLocalTransform().setRotation(glm::vec3(0.0f, (float)(rand() % 360), 0.0f));
 
-		int r = rand() % 4;
-		currentTree->addComponent(MeshRenderer::getMeshRenderer(meshes[r], textures[r], &renderingEngine, currentTree));
+		int r = rand() % 5;
+		currentTree->addComponent(MeshRenderer::getMeshRenderer("res/tree.obj", "res/treeTexture.png", &renderingEngine, currentTree));
 		root.addChild(currentTree);
 	}
 
@@ -40,12 +33,17 @@ Engine::Engine() : root("Root")
 	terrain->addComponent(MeshRenderer::getMeshRenderer("res/plane.obj", "res/grass.png", &renderingEngine, terrain));
 	root.addChild(terrain);
 
-	GameObject* dragon = new GameObject("Dragon");
+	/*GameObject* dragon = new GameObject("Dragon");
 	dragon->getLocalTransform().translate(glm::vec3(-140.0f, 2.0f, 0.0f));
 	dragon->getLocalTransform().scale() = glm::vec3(2.0f, 2.0f, 2.0f);
 	dragon->getLocalTransform().setRotation(glm::radians(glm::vec3(0.0f, 180.0f, 0.0f)));
 	dragon->addComponent(MeshRenderer::getMeshRenderer("res/dragonlp.obj", "res/white.png", &renderingEngine, dragon));
-	root.addChild(dragon);
+	root.addChild(dragon);*/
+
+	GameObject* sphere = new GameObject("Sphere");
+	sphere->getLocalTransform().translate(glm::vec3(0.0f, 1.0f, 0.0f));
+	sphere->addComponent(MeshRenderer::getMeshRenderer("res/sphere.obj", "res/white.png", &renderingEngine, sphere));
+	root.addChild(sphere);
 
 	run();
 }

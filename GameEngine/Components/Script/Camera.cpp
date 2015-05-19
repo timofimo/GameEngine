@@ -50,3 +50,8 @@ glm::mat4 Camera::getVPMatrix()
 {
 	return getProjectionMatrix() * getViewMatrix();
 }
+
+glm::vec3 Camera::getPosition()
+{
+	return m_parent->getWorldTransform().position();
+}

@@ -111,6 +111,19 @@ void GameObject::removeComponent(const std::string name)
 	}
 }
 
+GameComponent* GameObject::getComponent(std::string name)
+{
+	for (unsigned int i = 0; i < m_components.size(); i++)
+	{
+		if (m_components[i]->getName() == name)
+		{
+			return m_components[i];
+		}
+	}
+
+	return nullptr;
+}
+
 Transform& GameObject::getLocalTransform()
 {
 	return m_localTransform;

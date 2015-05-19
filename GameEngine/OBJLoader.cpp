@@ -208,6 +208,9 @@ void OBJLoader::indexModel(std::vector<Vertex>& returnVertices, std::vector<unsi
 		}
 	}
 
+	returnVertices.shrink_to_fit();
+	returnIndices.shrink_to_fit();
+
 	m_vertexPositions.clear();
 	m_vertexTexCoords.clear();
 	m_vertexNormals.clear();

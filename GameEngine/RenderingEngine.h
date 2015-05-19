@@ -3,13 +3,13 @@
 /*local includes*/
 #include "GameObject.h"
 #include "Shader.h"
-#include "Components/Script/Camera.h"
-#include "Components/Render/MeshRenderer.h"
+#include "Components.h"
 
 class RenderingEngine
 {
 private:
 	std::vector<MeshRenderer*> m_meshRenderers;
+	std::vector<LightComponent*> m_lights;
 
 	Display m_display;
 	enum Shaders
@@ -34,6 +34,9 @@ public:
 
 	void addMeshRenderer(MeshRenderer* meshRenderer);
 	void removeMeshRenderer(MeshRenderer* meshRenderer);
+
+	void addLight(LightComponent* light);
+	void removeLight(LightComponent* light);
 
 private:
 	void render(MeshRenderer* meshRenderer);

@@ -4,9 +4,13 @@
 #include "SimpleShader.h"
 #include "InstanceShader.h"
 
+#define AMBIENT_COLOR glm::vec3(0.3f, 0.3f, 0.3f)
+#define LIGHT_DIRECTION glm::vec3(0.1f, -0.5f, 0.0f)
+#define LIGHT_COLOR glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
+
 RenderingEngine::RenderingEngine() : m_display(640, 360, "OpenGL Window", false, false)
 {
-	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+	glClearColor(0.5f, 0.8f, 1.0f, 1.0f);
 
 	// initialize all shaders here
 	m_shaders[SIMPLE_SHADER] = new SimpleShader();
@@ -43,10 +47,6 @@ void RenderingEngine::renderScene()
 		else
 			render(mr);
 	}
-	// for each mesh
-		// for each texture
-			// update model matrix
-	// draw
 
 	glfwSwapBuffers(m_display.getWindow());
 }
@@ -80,10 +80,32 @@ void RenderingEngine::removeMeshRenderer(MeshRenderer* meshRenderer)
 		m_meshRenderers.erase(it);
 }
 
+void RenderingEngine::addLight(LightComponent* light)
+{
+	m_lights.push_back(light);
+}
+
+void RenderingEngine::removeLight(LightComponent* light)
+{
+	std::vector<LightComponent*>::iterator it = std::find(m_lights.begin(), m_lights.end(), light);
+	if (it == m_lights.end())
+		std::cout << "ERROR RENDERINGENGINE: tried to delete a light that doesn't exist" << std::endl;
+	else
+		m_lights.erase(it);
+}
+
 void RenderingEngine::render(MeshRenderer* meshRenderer)
 {
 	SimpleShader* shader = (SimpleShader*)m_shaders[SIMPLE_SHADER];
 	shader->bind();
+
+	shader->setAmbientColor(AMBIENT_COLOR);
+	shader->setEyePosition(m_activeCamera->getPosition());
+	shader->setLightDirection(LIGHT_DIRECTION);
+	shader->setLightColor(LIGHT_COLOR);
+	shader->setSpecularIntensity(0.1f);
+	shader->setSpecularPower(8.0f);
+
 	shader->updateModelMatrix(meshRenderer->getParents()[0]->getWorldTransform().modelMatrix());
 	meshRenderer->getMesh()->bind();
 	meshRenderer->getTexture()->bind(0);
@@ -96,6 +118,13 @@ void RenderingEngine::renderInstanced(MeshRenderer* meshRenderer)
 {
 	InstanceShader* shader = (InstanceShader*)m_shaders[INSTANCE_SHADER];
 	shader->bind();
+
+	shader->setAmbientColor(AMBIENT_COLOR);
+	shader->setEyePosition(m_activeCamera->getPosition());
+	shader->setLightDirection(LIGHT_DIRECTION);
+	shader->setLightColor(LIGHT_COLOR);
+	shader->setSpecularIntensity(0.1f);
+	shader->setSpecularPower(8.0f);
 
 	std::vector<glm::mat4> instanceMatrices;
 	if (meshRenderer->parentsTransformChanged())

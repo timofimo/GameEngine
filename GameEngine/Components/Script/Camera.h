@@ -5,8 +5,6 @@
 
 class Camera : public ScriptComponent
 {
-private:
-	int counter;
 public:
 	Camera();
 	~Camera();
@@ -16,5 +14,6 @@ public:
 	glm::mat4 getViewMatrix();
 	glm::mat4 getProjectionMatrix();
 	glm::mat4 getVPMatrix();
+	glm::vec3 getPosition();
 };
 

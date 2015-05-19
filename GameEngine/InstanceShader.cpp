@@ -36,6 +36,13 @@ InstanceShader::InstanceShader()
 	bind();
 	VPMatrixID = glGetUniformLocation(m_program, "VPMatrix");
 	modelMatrixID = glGetAttribLocation(m_program, "ModelMatrix");
+
+	m_uniforms[AMBIENT_COLOR] = glGetUniformLocation(m_program, "ambientColor");
+	m_uniforms[LIGHT_COLOR] = glGetUniformLocation(m_program, "lightColor");
+	m_uniforms[LIGHT_DIRECTION] = glGetUniformLocation(m_program, "lightDir");
+	m_uniforms[EYE_POSITION] = glGetUniformLocation(m_program, "eyePosition");
+	m_uniforms[SPECULAR_INTENSITY] = glGetUniformLocation(m_program, "specularIntensity");
+	m_uniforms[SPECULAR_POWER] = glGetUniformLocation(m_program, "specularPower");
 }
 
 
@@ -46,4 +53,34 @@ InstanceShader::~InstanceShader()
 GLuint InstanceShader::getModelMatrixID()
 {
 	return modelMatrixID;
+}
+
+void InstanceShader::setAmbientColor(glm::vec3 color)
+{
+	glUniform3fv(m_uniforms[AMBIENT_COLOR], 1, &color[0]);
+}
+
+void InstanceShader::setLightColor(glm::vec4& color)
+{
+	glUniform4fv(m_uniforms[LIGHT_COLOR], 1, &color[0]);
+}
+
+void InstanceShader::setLightDirection(glm::vec3 direction)
+{
+	glUniform3fv(m_uniforms[LIGHT_DIRECTION], 1, &direction[0]);
+}
+
+void InstanceShader::setEyePosition(glm::vec3 position)
+{
+	glUniform3fv(m_uniforms[EYE_POSITION], 1, &position[0]);
+}
+
+void InstanceShader::setSpecularIntensity(float intensity)
+{
+	glUniform1f(m_uniforms[SPECULAR_INTENSITY], intensity);
+}
+
+void InstanceShader::setSpecularPower(float power)
+{
+	glUniform1f(m_uniforms[SPECULAR_POWER], power);
 }

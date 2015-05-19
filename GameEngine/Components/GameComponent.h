@@ -15,7 +15,8 @@ public:
 	enum ComponentType
 	{
 		SCRIPT,
-		RENDER
+		RENDER,
+		LIGHT
 	};
 protected:
 	const ComponentType m_type;

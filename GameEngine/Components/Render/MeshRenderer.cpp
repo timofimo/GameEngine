@@ -66,7 +66,7 @@ void MeshRenderer::removeParent(GameObject* parent)
 	std::vector<GameObject*>::iterator it = std::find(m_parents.begin(), m_parents.end(), parent);
 	if (it == m_parents.end())
 	{
-		std::cout << "ERROR RENDERCOMPONENT: " << parent->getName().c_str() << " tried to delete a component that doesn't exist" << std::endl;
+		std::cout << "ERROR MESHRENDERER: " << parent->getName().c_str() << " tried to delete a component that doesn't exist" << std::endl;
 	}
 	else
 	{

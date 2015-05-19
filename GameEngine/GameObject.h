@@ -31,6 +31,7 @@ public:
 
 	void addComponent(GameComponent* component);
 	void removeComponent(const std::string name);
+	GameComponent* getComponent(std::string name);
 
 	Transform& getLocalTransform();
 	Transform& getWorldTransform();
