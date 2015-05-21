@@ -2,20 +2,30 @@
 
 /*local includes*/
 #include "GameObject.h"
-#include "Shader.h"
+#include "Shaders/Shader.h"
 #include "Components.h"
 
 class RenderingEngine
 {
 private:
 	std::vector<MeshRenderer*> m_meshRenderers;
-	std::vector<LightComponent*> m_lights;
+	std::vector<DirectionalLight*> m_directionalLights;
+	std::vector<PointLight*> m_pointLights;
+	std::vector<SpotLight*> m_spotLights;
 
 	Display m_display;
-	enum Shaders
+	/*enum Shaders
 	{
 		SIMPLE_SHADER,
 		INSTANCE_SHADER,
+		NUM_SHADERS
+	}; Shader* m_shaders[NUM_SHADERS];*/
+	enum Shaders
+	{
+		AMBIENT_SHADER,
+		DIRECTIONAL_SHADER,
+		POINT_SHADER,
+		SPOT_SHADER,
 		NUM_SHADERS
 	}; Shader* m_shaders[NUM_SHADERS];
 
@@ -40,6 +50,6 @@ public:
 
 private:
 	void render(MeshRenderer* meshRenderer);
-	void renderInstanced(MeshRenderer* meshRenderers);
+	void renderInstanced(MeshRenderer* meshRenderers, GLuint ModelMatrixID);
 };
 

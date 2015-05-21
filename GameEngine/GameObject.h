@@ -3,7 +3,7 @@
 /*local includes*/
 #include "Transform.h"
 #include "Components/GameComponent.h"
-#include "Shader.h"
+#include "Shaders/Shader.h"
 
 /*utility includes*/
 #include <vector>

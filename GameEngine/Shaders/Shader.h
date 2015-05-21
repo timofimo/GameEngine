@@ -4,8 +4,8 @@
 #include "GL/glew.h"
 #include "glm/glm.hpp"
 #include "glm/gtx/transform.hpp"
-#include "Display.h"
-#include "Components/Script/Camera.h"
+#include "../Display.h"
+#include "../Components/Script/Camera.h"
 
 /*utility includes*/
 #include <iostream>
@@ -26,6 +26,6 @@ public:
 
 protected:
 	std::string loadShader(const std::string file);
-	void checkShader(GLuint* shaders, unsigned int nShaders);
+	void checkShader(GLuint* shaders, unsigned int nShaders, std::string file);
 };
 

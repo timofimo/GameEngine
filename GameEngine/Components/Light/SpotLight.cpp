@@ -1,7 +1,10 @@
 #include "SpotLight.h"
 
+/*local includes*/
+#include "../GameObject.h"
+#include "../Shaders/InstanceSpotShader.h"
 
-SpotLight::SpotLight(std::string name, glm::vec3 color, glm::vec3 direction, float angle, float constant, float linear, float exponent, RenderingEngine* renderingEngine) : PointLight(name, color, constant, linear, exponent, renderingEngine)
+SpotLight::SpotLight(std::string name, glm::vec3 color, glm::vec3 position, glm::vec3 direction, float angle, float constant, float linear, float exponent, RenderingEngine* renderingEngine) : PointLight(name, color, position, constant, linear, exponent, renderingEngine, LightComponent::SPOT_LIGHT)
 {
 	setDirection(direction);
 	setAngle(angle);
@@ -30,4 +33,16 @@ float SpotLight::getAngle()
 void SpotLight::setAngle(float angle)
 {
 	m_angle = angle;
+}
+
+void SpotLight::updateUniforms(Shader* shader)
+{
+	InstanceSpotShader* s = (InstanceSpotShader*)shader;
+	s->setLightColor(getLight());
+	s->setLightPosition(m_parent->getWorldTransform().position() + m_position);
+	s->setLightConstant(m_constant);
+	s->setLightLinear(m_linear);
+	s->setLightExponent(m_exponent);
+	s->setLightCutOff(m_angle);
+	s->setLightDirection(m_direction);
 }

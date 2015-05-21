@@ -3,11 +3,12 @@
 /*local includes*/
 #include "../RenderingEngine.h"
 
-LightComponent::LightComponent(std::string name, glm::vec3 color, float intensity, RenderingEngine* renderingEngine) : GameComponent(GameComponent::LIGHT, name)
+LightComponent::LightComponent(std::string name, glm::vec3 color, float intensity, RenderingEngine* renderingEngine, LightTypes type) : GameComponent(GameComponent::LIGHT, name)
 {
 	setColor(color);
 	setIntensity(intensity);
 	m_renderingEngine = renderingEngine;
+	m_type = type;
 	m_renderingEngine->addLight(this);
 }
 
@@ -40,4 +41,9 @@ void LightComponent::setIntensity(float intensity)
 glm::vec3 LightComponent::getLight()
 {
 	return m_color * m_intensity;
+}
+
+LightComponent::LightTypes LightComponent::getType()
+{
+	return m_type;
 }

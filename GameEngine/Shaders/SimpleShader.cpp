@@ -4,8 +4,8 @@
 SimpleShader::SimpleShader()
 {
 	// load the shaders
-	std::string vertexShaderSource = loadShader("res/vertexShader.glsl");
-	std::string fragmentShaderSource = loadShader("res/fragmentShader.glsl");
+	std::string vertexShaderSource = loadShader("res/Shaders/vertexShader.glsl");
+	std::string fragmentShaderSource = loadShader("res/Shaders/fragmentShader.glsl");
 
 	// create and compile the shaders
 	const GLchar* p[1];
@@ -31,7 +31,7 @@ SimpleShader::SimpleShader()
 	glValidateProgram(m_program);
 
 	// check the shader for errors
-	checkShader(m_shaders, NUM_SHADERS);
+	checkShader(m_shaders, NUM_SHADERS, "Simple");
 
 	bind();
 	VPMatrixID = glGetUniformLocation(m_program, "VPMatrix");

@@ -2,7 +2,7 @@
 
 /*local includes*/
 #include "Display.h"
-#include "Shader.h"
+#include "Shaders/Shader.h"
 #include "GameObject.h"
 #include "RenderingEngine.h"
 

@@ -22,12 +22,14 @@ public:
 	void printRotation();
 	void printRotationQ();
 
-	glm::vec3& position();
-	glm::vec3& scale();
-	glm::vec3& rotation();
-	glm::quat& rotationQ();
+	glm::vec3 position();
+	glm::vec3 scale();
+	glm::vec3 rotation();
+	glm::quat rotationQ();
 	glm::mat4 modelMatrix();
 
+	void setPosition(const glm::vec3 pos);
+	void setScale(const glm::vec3 scl);
 	void setRotation(const glm::vec3 rot);
 	void setRotation(const glm::quat rot);
 

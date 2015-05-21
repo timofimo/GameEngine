@@ -6,9 +6,10 @@
 class PointLight : public LightComponent
 {
 protected:
+	glm::vec3 m_position;
 	float m_constant, m_linear, m_exponent;
 public:
-	PointLight(std::string name, glm::vec3 color, float constant, float linear, float exponent, RenderingEngine* renderingEngine);
+	PointLight(std::string name, glm::vec3 color, glm::vec3 position, float constant, float linear, float exponent, RenderingEngine* renderingEngine, LightComponent::LightTypes type = LightComponent::POINT_LIGHT);
 	~PointLight();
 
 	float getConstant();
@@ -20,5 +21,7 @@ public:
 	glm::vec3 getAttenuation();
 	void setAttenuation(glm::vec3 attenuation);
 	float getRange();
+
+	virtual void updateUniforms(Shader* shader);
 };
 

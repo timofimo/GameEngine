@@ -1,11 +1,11 @@
-#include "InstanceShader.h"
+#include "InstancePointShader.h"
 
 
-InstanceShader::InstanceShader()
+InstancePointShader::InstancePointShader()
 {
 	// load the shaders
-	std::string vertexShaderSource = loadShader("res/instanceVertexShader.glsl");
-	std::string fragmentShaderSource = loadShader("res/fragmentShader.glsl");
+	std::string vertexShaderSource = loadShader("res/Shaders/instanceVertexShader.glsl");
+	std::string fragmentShaderSource = loadShader("res/Shaders/pointFragmentShader.glsl");
 
 	// create and compile the shaders
 	const GLchar* p[1];
@@ -31,56 +31,68 @@ InstanceShader::InstanceShader()
 	glValidateProgram(m_program);
 
 	// check the shader for errors
-	checkShader(m_shaders, NUM_SHADERS);
+	checkShader(m_shaders, NUM_SHADERS, "Point");
 
 	bind();
 	VPMatrixID = glGetUniformLocation(m_program, "VPMatrix");
 	modelMatrixID = glGetAttribLocation(m_program, "ModelMatrix");
 
-	m_uniforms[AMBIENT_COLOR] = glGetUniformLocation(m_program, "ambientColor");
 	m_uniforms[LIGHT_COLOR] = glGetUniformLocation(m_program, "lightColor");
-	m_uniforms[LIGHT_DIRECTION] = glGetUniformLocation(m_program, "lightDir");
+	m_uniforms[LIGHT_POSITION] = glGetUniformLocation(m_program, "lightPosition");
+	m_uniforms[LIGHT_CONSTANT] = glGetUniformLocation(m_program, "lightConstant");
+	m_uniforms[LIGHT_LINEAR] = glGetUniformLocation(m_program, "lightLinear");
+	m_uniforms[LIGHT_EXPONENT] = glGetUniformLocation(m_program, "lightExponent");
 	m_uniforms[EYE_POSITION] = glGetUniformLocation(m_program, "eyePosition");
 	m_uniforms[SPECULAR_INTENSITY] = glGetUniformLocation(m_program, "specularIntensity");
 	m_uniforms[SPECULAR_POWER] = glGetUniformLocation(m_program, "specularPower");
 }
 
 
-InstanceShader::~InstanceShader()
+InstancePointShader::~InstancePointShader()
 {
 }
 
-GLuint InstanceShader::getModelMatrixID()
+GLuint InstancePointShader::getModelMatrixID()
 {
 	return modelMatrixID;
 }
 
-void InstanceShader::setAmbientColor(glm::vec3 color)
+void InstancePointShader::setLightColor(glm::vec3& color)
 {
-	glUniform3fv(m_uniforms[AMBIENT_COLOR], 1, &color[0]);
+	glUniform3fv(m_uniforms[LIGHT_COLOR], 1, &color[0]);
 }
 
-void InstanceShader::setLightColor(glm::vec4& color)
+void InstancePointShader::setLightPosition(glm::vec3 position)
 {
-	glUniform4fv(m_uniforms[LIGHT_COLOR], 1, &color[0]);
+	glUniform3fv(m_uniforms[LIGHT_POSITION], 1, &position[0]);
 }
 
-void InstanceShader::setLightDirection(glm::vec3 direction)
+void InstancePointShader::setLightConstant(float constant)
 {
-	glUniform3fv(m_uniforms[LIGHT_DIRECTION], 1, &direction[0]);
+	glUniform1f(m_uniforms[LIGHT_CONSTANT], constant);
 }
 
-void InstanceShader::setEyePosition(glm::vec3 position)
+void InstancePointShader::setLightLinear(float linear)
+{
+	glUniform1f(m_uniforms[LIGHT_LINEAR], linear);
+}
+
+void InstancePointShader::setLightExponent(float exponent)
+{
+	glUniform1f(m_uniforms[LIGHT_EXPONENT], exponent);
+}
+
+void InstancePointShader::setEyePosition(glm::vec3 position)
 {
 	glUniform3fv(m_uniforms[EYE_POSITION], 1, &position[0]);
 }
 
-void InstanceShader::setSpecularIntensity(float intensity)
+void InstancePointShader::setSpecularIntensity(float intensity)
 {
 	glUniform1f(m_uniforms[SPECULAR_INTENSITY], intensity);
 }
 
-void InstanceShader::setSpecularPower(float power)
+void InstancePointShader::setSpecularPower(float power)
 {
 	glUniform1f(m_uniforms[SPECULAR_POWER], power);
 }

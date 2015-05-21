@@ -44,7 +44,7 @@ std::string Shader::loadShader(const std::string file)
 	return result;
 }
 
-void Shader::checkShader(GLuint* shaders, unsigned int nShaders)
+void Shader::checkShader(GLuint* shaders, unsigned int nShaders, std::string file)
 {
 	GLint succes = 0;
 	GLchar error[1024] = { 0 };
@@ -56,7 +56,7 @@ void Shader::checkShader(GLuint* shaders, unsigned int nShaders)
 		if (succes == GL_FALSE)
 		{
 			glGetShaderInfoLog(shaders[i], sizeof(error), NULL, error);
-			std::cerr << "SHADER ERROR: " << error << std::endl;
+			std::cerr << "SHADER ERROR: " << file.c_str() << error << std::endl;
 		}
 	}
 
@@ -64,6 +64,6 @@ void Shader::checkShader(GLuint* shaders, unsigned int nShaders)
 	if (succes == GL_FALSE)
 	{
 		glGetProgramInfoLog(m_program, sizeof(error), NULL, error);
-		std::cerr << "SHADER PROGRAM ERROR: " << error << std::endl;
+		std::cerr << "SHADER PROGRAM ERROR: " << file.c_str() << error << std::endl;
 	}
 }

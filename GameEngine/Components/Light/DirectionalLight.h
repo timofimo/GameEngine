@@ -13,5 +13,7 @@ public:
 
 	glm::vec3 getDirection();
 	void setDirection(glm::vec3 direction);
+
+	void updateUniforms(Shader* shader);
 };
 

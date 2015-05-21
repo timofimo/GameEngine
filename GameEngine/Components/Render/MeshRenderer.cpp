@@ -2,7 +2,7 @@
 
 std::map<std::string, MeshRenderer*> MeshRenderer::m_meshRenderers;
 
-#include "../Shader.h"
+#include "../Shaders/Shader.h"
 #include "../GameObject.h"
 #include "../RenderingEngine.h"
 

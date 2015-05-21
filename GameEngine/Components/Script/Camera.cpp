@@ -2,7 +2,7 @@
 
 /*local includes*/
 #include "../Display.h"
-#include "../Shader.h"
+#include "../Shaders/Shader.h"
 #include "../GameObject.h"
 
 Camera::Camera() : ScriptComponent("Camera")
@@ -26,6 +26,8 @@ void Camera::update(float deltaTime)
 		m_parent->getLocalTransform().rotate(glm::vec3(0.0f, 1.0f, 0.0f) * deltaTime);
 
 	float movementSpeed = 10.0f;
+	if (glfwGetKey(Display::getWindow(), GLFW_KEY_LEFT_SHIFT))
+		movementSpeed = 100.0f;
 	if (glfwGetKey(Display::getWindow(), GLFW_KEY_W))
 		m_parent->getLocalTransform().translate(m_parent->getWorldTransform().forward() * deltaTime * movementSpeed);
 	if (glfwGetKey(Display::getWindow(), GLFW_KEY_S))

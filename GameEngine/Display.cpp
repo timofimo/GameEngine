@@ -73,6 +73,8 @@ Display::~Display()
 
 int Display::shouldClose()
 {
+	if (glfwGetKey(m_window, GLFW_KEY_ESCAPE))
+		glfwSetWindowShouldClose(m_window, 1);
 	return glfwWindowShouldClose(m_window);
 }
 

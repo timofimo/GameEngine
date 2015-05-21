@@ -60,22 +60,22 @@ void Transform::printRotationQ()
 	std::cout << std::setprecision(3) << "Rotation(" << m_qrot.x << ", " << m_qrot.y << ", " << m_qrot.z << ", " << m_qrot.w << ")" << std::endl;
 }
 
-glm::vec3& Transform::position()
+glm::vec3 Transform::position()
 {
 	return m_pos;
 }
 
-glm::vec3& Transform::scale()
+glm::vec3 Transform::scale()
 {
 	return m_scl;
 }
 
-glm::vec3& Transform::rotation()
+glm::vec3 Transform::rotation()
 {
 	return m_rot;
 }
 
-glm::quat& Transform::rotationQ()
+glm::quat Transform::rotationQ()
 {
 	return m_qrot;
 }
@@ -86,6 +86,18 @@ glm::mat4 Transform::modelMatrix()
 		return m_worldMatrix = glm::translate(m_pos) * glm::mat4(m_qrot) * glm::scale(m_scl);
 	else
 		return m_worldMatrix;
+}
+
+void Transform::setPosition(const glm::vec3 pos)
+{
+	m_hasChanged = true;
+	m_pos = pos;
+}
+
+void Transform::setScale(const glm::vec3 scl)
+{
+	m_hasChanged = true;
+	m_scl = scl;
 }
 
 void Transform::setRotation(const glm::vec3 rot)

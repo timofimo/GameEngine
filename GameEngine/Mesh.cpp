@@ -116,12 +116,6 @@ void Mesh::drawInstanced(std::vector<glm::mat4> instanceData, GLuint attribID)
 	}
 
 	glDrawElementsInstanced(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, 0, m_nInstances);
-
-	/*GLuint error = glGetError();
-	if (error != GL_NO_ERROR)
-	{
-		std::cout << "Error: " << error << std::endl;
-	}*/
 }
 
 void Mesh::unbind()
