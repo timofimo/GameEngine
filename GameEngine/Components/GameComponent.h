@@ -4,6 +4,7 @@ class GameObject;
 class Shader;
 
 /*local includes*/
+#include "../Input.h"
 #include "../Transform.h"
 
 /*utility includes*/

@@ -19,6 +19,12 @@ void Shader::updateVPMatrix(glm::mat4& VPMatrix)
 		glUniformMatrix4fv(VPMatrixID, 1, GL_FALSE, &VPMatrix[0][0]);
 }
 
+void Shader::UpdateModelMatrix(glm::mat4& ModelMatrix)
+{
+	if (ModelMatrixID != UINT_MAX)
+		glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
+}
+
 void Shader::bind()
 {
 	glUseProgram(m_program);

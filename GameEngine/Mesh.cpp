@@ -3,8 +3,19 @@
 OBJLoader Mesh::m_loader;
 std::map<std::string, Mesh*> Mesh::m_loadedMeshes;
 
-Mesh::Mesh(const std::string file, std::vector<Vertex> vertices, std::vector<unsigned int> indices) : m_name(file)
+Mesh::Mesh(const std::string file, std::vector<Vertex> vertices, std::vector<unsigned int> indices, glm::vec3 boundingSphereCenter, float radius, glm::vec3 boundingBoxMin, glm::vec3 boundingBoxMax)
 {
+	m_name = file;
+	m_center = boundingSphereCenter;
+	m_radius = radius;
+	m_min = boundingBoxMin;
+	m_max = boundingBoxMax;
+
+	glm::vec3 dimensions = m_max - m_min;
+	float bb = dimensions.x * dimensions.y * dimensions.z;
+	float bs = (4 / 3)*glm::pi<float>()*glm::pow(m_radius, 3);
+	m_boundingBoxIsSmaller = bb < bs;
+
 	m_vertices = vertices;
 	m_indices = indices;
 
@@ -29,7 +40,7 @@ Mesh::Mesh(const std::string file, std::vector<Vertex> vertices, std::vector<uns
 	glGenBuffers(1, &instanceBuffer);
 	
 	glBindBuffer(GL_ARRAY_BUFFER, instanceBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4), NULL, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4), 0, GL_DYNAMIC_DRAW);
 
 	glBindVertexArray(0);
 
@@ -63,8 +74,10 @@ Mesh* Mesh::getMesh(std::string file)
 	{
 		std::vector<Vertex> vertices;
 		std::vector<unsigned int> indices;
-		m_loader.loadOBJ(file, vertices, indices);
-		result = new Mesh(file, vertices, indices);
+		glm::vec3 boundingSphereCenter, boundingBoxMin, boundingBoxMax;
+		float radius;
+		m_loader.loadOBJ(file, vertices, indices, boundingSphereCenter, radius, boundingBoxMin, boundingBoxMax);
+		result = new Mesh(file, vertices, indices, boundingSphereCenter, radius, boundingBoxMin, boundingBoxMax);
 	}
 	else
 		result = it->second;
@@ -126,4 +139,25 @@ void Mesh::unbind()
 void Mesh::increaseReferences()
 {
 	m_nReferences++;
+}
+
+glm::vec3 Mesh::getBoundingSphereCenter()
+{
+	return m_center;
+}
+
+float Mesh::getRadius()
+{
+	return m_radius;
+}
+
+void Mesh::getBoundingBox(glm::vec3& min, glm::vec3& max)
+{
+	min = m_min;
+	max = m_max;
+}
+
+bool Mesh::boundingBoxIsSmaller()
+{
+	return m_boundingBoxIsSmaller;
 }

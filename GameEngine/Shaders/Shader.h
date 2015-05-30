@@ -15,12 +15,13 @@ class Shader
 protected:
 	
 	GLuint m_program;
-	GLuint VPMatrixID = UINT_MAX;
+	GLuint VPMatrixID = UINT_MAX, ModelMatrixID = UINT_MAX;
 public:
 	Shader();
 	virtual ~Shader();
 
 	void updateVPMatrix(glm::mat4& VPMatrix);
+	void UpdateModelMatrix(glm::mat4& ModelMatrix);
 
 	void bind();
 

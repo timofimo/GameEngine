@@ -129,14 +129,14 @@ Transform& GameObject::getLocalTransform()
 	return m_localTransform;
 }
 
-Transform& GameObject::getWorldTransform()
+Transform& GameObject::getWorldTransform(bool reset)
 {
 	if (m_parent)
 	{
-		if (transformChanged(true))
+		if (transformChanged(reset))
 		{
 			Transform t = m_localTransform;
-			Transform pt(m_parent->getWorldTransform());
+			Transform pt(m_parent->getWorldTransform(reset));
 
 			t.position() *= pt.scale();
 			t.scale() *= pt.scale();
@@ -161,6 +161,7 @@ bool GameObject::transformChanged(bool reset)
 		result |= m_parent->transformChanged(reset);
 	return result;
 }
+
 
 std::string GameObject::getName()
 {

@@ -24,6 +24,7 @@ public:
 
 	glm::vec3 position();
 	glm::vec3 scale();
+	float scalef();
 	glm::vec3 rotation();
 	glm::quat rotationQ();
 	glm::mat4 modelMatrix();
@@ -40,6 +41,7 @@ public:
 
 	glm::vec3 forward();
 	glm::vec3 right();
+	glm::vec3 up();
 
 	bool hasChanged(bool reset);
 	void setHasChanged(bool changed);

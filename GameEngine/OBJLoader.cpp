@@ -14,8 +14,11 @@ OBJLoader::~OBJLoader()
 {
 }
 
-void OBJLoader::loadOBJ(const std::string obj, std::vector<Vertex>& returnVertices, std::vector<unsigned int>& returnIndices)
+void OBJLoader::loadOBJ(const std::string obj, std::vector<Vertex>& returnVertices, std::vector<unsigned int>& returnIndices, glm::vec3& center, float& radius, glm::vec3& min, glm::vec3& max)
 {
+	//used to calculate bounding sphere
+	glm::vec3 p0, p1, p2;
+
 	std::ifstream file(obj.c_str());
 	if (file.is_open())
 	{
@@ -46,7 +49,23 @@ void OBJLoader::loadOBJ(const std::string obj, std::vector<Vertex>& returnVertic
 			// load vertex position
 			if (line[0] == 'v' && line[1] == ' ')
 			{
-				m_vertexPositions.push_back(loadVec3(line));
+				glm::vec3 pos = loadVec3(line);
+				m_vertexPositions.push_back(pos);
+
+				float distance = glm::distance(p0, pos);
+				if (distance > m_radius)
+				{
+					m_radius = distance;
+					p1 = pos;
+				}
+
+				if(pos.x < min.x) min.x = pos.x;
+				else if (pos.x > max.x) max.x = pos.x;
+				if (pos.y < min.y) min.y = pos.y;
+				else if (pos.y > max.y) max.y = pos.y;
+				if (pos.z < min.z) min.z = pos.z;
+				else if (pos.z > max.z) max.z = pos.z;
+
 				continue;
 			}
 			// load texCoord
@@ -76,6 +95,18 @@ void OBJLoader::loadOBJ(const std::string obj, std::vector<Vertex>& returnVertic
 		return;
 	}
 
+	for each (glm::vec3 pos in m_vertexPositions)
+	{
+		float distance = glm::distance(p1, pos);
+		if (distance > m_radius)
+		{
+			m_radius = distance;
+			p2 = pos;
+		}
+	}
+
+	center = (p1 + p2) / 2.0f;
+	radius = m_radius / 2.0f;
 	indexModel(returnVertices, returnIndices);
 }
 
@@ -215,4 +246,5 @@ void OBJLoader::indexModel(std::vector<Vertex>& returnVertices, std::vector<unsi
 	m_vertexTexCoords.clear();
 	m_vertexNormals.clear();
 	m_indices.clear();
+	m_radius = 0.0f;
 }

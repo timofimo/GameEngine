@@ -68,11 +68,16 @@ float PointLight::getRange()
 	return ((-b + glm::sqrt(b * b - 4 * a * c)) / (2 * a));
 }
 
+glm::vec3 PointLight::getPosition()
+{
+	return m_parent->getWorldTransform(false).position() + m_position;
+}
+
 void PointLight::updateUniforms(Shader* shader)
 {
 	InstancePointShader* s = (InstancePointShader*)shader;
 	s->setLightColor(getLight());
-	s->setLightPosition(m_parent->getWorldTransform().position() + m_position);
+	s->setLightPosition(m_parent->getWorldTransform(false).position() + m_position);
 	s->setLightConstant(m_constant);
 	s->setLightLinear(m_linear);
 	s->setLightExponent(m_exponent);

@@ -2,7 +2,7 @@
 
 /*local includes*/
 #include "GL/glew.h"
-#include "GLFW/glfw3.h"
+#include "Input.h"
 
 /*utility includes*/
 #include <iostream>
@@ -21,5 +21,12 @@ public:
 	static unsigned int getWidth();
 	static unsigned int getHeight();
 	static GLFWwindow* getWindow();
+
+private:
+	static void error_callback(int error, const char* description);
+	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+	static void cursor_pos_callback(GLFWwindow* window, double x, double y);
+	static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+	static void cursor_enter_callback(GLFWwindow* window, int entered);
 };
 

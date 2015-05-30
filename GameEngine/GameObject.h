@@ -34,7 +34,7 @@ public:
 	GameComponent* getComponent(std::string name);
 
 	Transform& getLocalTransform();
-	Transform& getWorldTransform();
+	Transform& getWorldTransform(bool reset);
 	bool transformChanged(bool reset);
 
 	std::string getName();

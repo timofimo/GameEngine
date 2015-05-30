@@ -39,10 +39,10 @@ void SpotLight::updateUniforms(Shader* shader)
 {
 	InstanceSpotShader* s = (InstanceSpotShader*)shader;
 	s->setLightColor(getLight());
-	s->setLightPosition(m_parent->getWorldTransform().position() + m_position);
+	s->setLightPosition(m_parent->getWorldTransform(false).position() + m_position);
 	s->setLightConstant(m_constant);
 	s->setLightLinear(m_linear);
 	s->setLightExponent(m_exponent);
 	s->setLightCutOff(m_angle);
-	s->setLightDirection(m_direction);
+	//s->setLightDirection(m_direction);
 }

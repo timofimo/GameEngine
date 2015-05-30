@@ -70,6 +70,11 @@ glm::vec3 Transform::scale()
 	return m_scl;
 }
 
+float Transform::scalef()
+{
+	return glm::max(glm::max(m_scl.x, m_scl.y), m_scl.z);
+}
+
 glm::vec3 Transform::rotation()
 {
 	return m_rot;
@@ -152,6 +157,11 @@ glm::vec3 Transform::forward()
 glm::vec3 Transform::right()
 {
 	return glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), forward()));
+}
+
+glm::vec3 Transform::up()
+{
+	return glm::normalize(glm::cross(forward(), right()));
 }
 
 bool Transform::hasChanged(bool reset)

@@ -8,11 +8,11 @@
 #include "Shaders/InstancePointShader.h"
 #include "Shaders/InstanceSpotShader.h"
 
-#define AMBIENT_COLOR glm::vec3(0.2f, 0.2f, 0.2f)
+#define AMBIENT_COLOR glm::vec3(0.1f, 0.1f, 0.1f)
 
 RenderingEngine::RenderingEngine() : m_display(960, 540, "OpenGL Window", false, false)
 {
-	glClearColor(0.5f, 0.8f, 1.0f, 1.0f);
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
 	// initialize all shaders here
 	m_shaders[AMBIENT_SHADER] = new InstanceAmbientShader();
@@ -45,17 +45,13 @@ void RenderingEngine::renderScene()
 	}
 
 	//ambient pass
-	Shader* shader = m_shaders[AMBIENT_SHADER];
-	shader->bind();
+	m_activeShader = m_shaders[AMBIENT_SHADER];
+	m_activeShader->bind();
 
-	((InstanceAmbientShader*)shader)->setAmbientColor(AMBIENT_COLOR);
+	((InstanceAmbientShader*)m_activeShader)->setAmbientColor(AMBIENT_COLOR);
 	for each (MeshRenderer* mr in m_meshRenderers)
 	{
-		/*if (mr->getParents().size() > 1)
-			renderInstanced(mr);
-		else
-			render(mr);*/
-		renderInstanced(mr, ((InstanceAmbientShader*)shader)->getModelMatrixID());
+		renderInstanced(mr, ((InstanceAmbientShader*)m_activeShader)->getModelMatrixID());
 	}
 
 	//set options
@@ -65,42 +61,43 @@ void RenderingEngine::renderScene()
 	glDepthFunc(GL_EQUAL);
 
 	//directional pass
-	shader = m_shaders[DIRECTIONAL_SHADER];
-	shader->bind();
+	m_activeShader = m_shaders[DIRECTIONAL_SHADER];
+	m_activeShader->bind();
 	for each (DirectionalLight* light in m_directionalLights)
 	{
-		light->updateUniforms(shader);
+		light->updateUniforms(m_activeShader);
 
 		for each (MeshRenderer* mr in m_meshRenderers)
 		{
-			renderInstanced(mr, ((InstanceDirectionalShader*)shader)->getModelMatrixID());
+			renderInstanced(mr, ((InstanceDirectionalShader*)m_activeShader)->getModelMatrixID());
 		}
 	}	
 
 	//point pass
-	shader = m_shaders[POINT_SHADER];
-	shader->bind();
+	m_activeShader = m_shaders[POINT_SHADER];
+	m_activeShader->bind();
 	
 	for each (PointLight* light in m_pointLights)
 	{
-		light->updateUniforms(shader);
+		light->updateUniforms(m_activeShader);
 
 		for each (MeshRenderer* mr in m_meshRenderers)
 		{
-			renderInstanced(mr, ((InstancePointShader*)shader)->getModelMatrixID());
+			//renderInstanced(mr, ((InstancePointShader*)m_activeShader)->getModelMatrixID());
+			renderInstancedPointLight(mr, ((InstancePointShader*)m_activeShader)->getModelMatrixID(), light->getPosition(), light->getRange());
 		}
 	}	
 
 	//spot pass
-	shader = m_shaders[SPOT_SHADER];
-	shader->bind();
+	m_activeShader = m_shaders[SPOT_SHADER];
+	m_activeShader->bind();
 	for each (SpotLight* light in m_spotLights)
 	{
-		light->updateUniforms(shader);
+		light->updateUniforms(m_activeShader);
 
 		for each (MeshRenderer* mr in m_meshRenderers)
 		{
-			renderInstanced(mr, ((InstanceSpotShader*)shader)->getModelMatrixID());
+			renderInstanced(mr, ((InstanceSpotShader*)m_activeShader)->getModelMatrixID());
 		}
 	}
 	
@@ -189,42 +186,76 @@ void RenderingEngine::removeLight(LightComponent* light)
 	}	
 }
 
-void RenderingEngine::render(MeshRenderer* meshRenderer)
+void RenderingEngine::render(MeshRenderer* meshRenderer, Shader* shader)
 {
-	/*SimpleShader* shader = (SimpleShader*)m_shaders[SIMPLE_SHADER];
-	shader->bind();
-
-	shader->setAmbientColor(AMBIENT_COLOR);
-	shader->setEyePosition(m_activeCamera->getPosition());
-	shader->setLightDirection(LIGHT_DIRECTION);
-	shader->setLightColor(LIGHT_COLOR);
-	shader->setSpecularIntensity(0.1f);
-	shader->setSpecularPower(8.0f);
-
-	shader->updateModelMatrix(meshRenderer->getParents()[0]->getWorldTransform().modelMatrix());
-	meshRenderer->getMesh()->bind();
+	/*meshRenderer->getMesh()->bind();
 	meshRenderer->getTexture()->bind(0);
-	meshRenderer->getMesh()->draw();
+
+	for each (GameObject* parent in meshRenderer->getParents())
+	{
+		shader->UpdateModelMatrix(parent->getWorldTransform().modelMatrix());
+		meshRenderer->getMesh()->draw();
+	}
+
 	meshRenderer->getMesh()->unbind();
 	meshRenderer->getTexture()->unbind(0);*/
 }
 
 void RenderingEngine::renderInstanced(MeshRenderer* meshRenderer, GLuint ModelMatrixID)
 {
-	std::vector<glm::mat4> instanceMatrices;
+	//double startTime = glfwGetTime();
+	/*std::vector<glm::mat4> instanceMatrices;
 	if (meshRenderer->parentsTransformChanged())
 	{
-		for each (GameObject* parent in meshRenderer->getParents())
+		for each (GameObject* parent in meshRenderer->getParents())						//old way - without frustum culling
 		{
-			instanceMatrices.push_back(parent->getWorldTransform().modelMatrix());
+			instanceMatrices.push_back(parent->getWorldTransform(true).modelMatrix());
 		}
+	}*/
+	std::vector<glm::mat4> instanceMatrices;	
+	for each (GameObject* parent in meshRenderer->getParents())
+	{
+		Transform t = parent->getWorldTransform(false);
+		
+		if (m_activeCamera->sphereInFrustum(t.position() + meshRenderer->getMesh()->getBoundingSphereCenter() * t.scale(), meshRenderer->getMesh()->getRadius() * t.scalef()))
+			instanceMatrices.push_back(parent->getWorldTransform(true).modelMatrix());
+	}
+	//std::cout << meshRenderer->getName().c_str() << ": " << glfwGetTime() - startTime << std::endl;
+
+	if (instanceMatrices.size() > 0)
+	{
+		meshRenderer->getMesh()->bind();
+		meshRenderer->getTexture()->bind(0);
+
+
+		meshRenderer->getMesh()->drawInstanced(instanceMatrices, ModelMatrixID);
+
+		meshRenderer->getMesh()->unbind();
+		meshRenderer->getTexture()->unbind(0);
+	}
+}
+
+void RenderingEngine::renderInstancedPointLight(MeshRenderer* meshRenderer, GLuint ModelMatrixID, glm::vec3 position, float range)
+{
+	std::vector<glm::mat4> instanceMatrices;
+	for each (GameObject* parent in meshRenderer->getParents())
+	{
+		Transform t = parent->getWorldTransform(false);
+
+		if (m_activeCamera->sphereInFrustum(t.position() + meshRenderer->getMesh()->getBoundingSphereCenter() * t.scale(), meshRenderer->getMesh()->getRadius() * t.scalef()))
+			if (glm::distance(t.position() + meshRenderer->getMesh()->getBoundingSphereCenter() * t.scale(), position) <= range + meshRenderer->getMesh()->getRadius() * t.scalef())
+				instanceMatrices.push_back(parent->getWorldTransform(true).modelMatrix());
 	}
 
-	meshRenderer->getMesh()->bind();
-	meshRenderer->getTexture()->bind(0);
+	if (instanceMatrices.size() > 0)
+	{
+		meshRenderer->getMesh()->bind();
+		meshRenderer->getTexture()->bind(0);
 
-	meshRenderer->getMesh()->drawInstanced(instanceMatrices, ModelMatrixID);
 
-	meshRenderer->getMesh()->unbind();
-	meshRenderer->getTexture()->unbind(0);
+		meshRenderer->getMesh()->drawInstanced(instanceMatrices, ModelMatrixID);
+
+		meshRenderer->getMesh()->unbind();
+		meshRenderer->getTexture()->unbind(0);
+	}
 }

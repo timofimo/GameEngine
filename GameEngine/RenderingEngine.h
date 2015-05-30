@@ -49,7 +49,8 @@ public:
 	void removeLight(LightComponent* light);
 
 private:
-	void render(MeshRenderer* meshRenderer);
-	void renderInstanced(MeshRenderer* meshRenderers, GLuint ModelMatrixID);
+	void render(MeshRenderer* meshRenderer, Shader* shader);
+	void renderInstanced(MeshRenderer* meshRenderer, GLuint ModelMatrixID);
+	void renderInstancedPointLight(MeshRenderer* meshRenderer, GLuint ModelMatrixID, glm::vec3 position, float range);
 };
 

@@ -55,14 +55,23 @@ Display::Display(unsigned int width, unsigned int height, const std::string name
 	std::cout << "OpenGL version supported " << version << std::endl;
 #endif
 
+	glfwSetWindowPos(m_window, 500, 450);
+
 	// enable depth test
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS); // a smaller value is closer
 	// enable back face culling
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
-
+	// disable vSync
 	glfwSwapInterval(0);
+
+	// set GLFW callbacks
+	glfwSetKeyCallback(m_window, key_callback);
+	glfwSetCursorPosCallback(m_window, cursor_pos_callback);
+	glfwSetMouseButtonCallback(m_window, mouse_button_callback);
+	glfwSetCursorEnterCallback(m_window, cursor_enter_callback);
+	Input::setParentWindow(m_window);
 }
 
 
@@ -91,4 +100,32 @@ unsigned int Display::getHeight()
 GLFWwindow* Display::getWindow()
 {
 	return m_window;
+}
+
+void Display::error_callback(int error, const char* description)
+{
+	std::cout << "GLFW ERROR: " << description << std::endl;
+}
+
+void Display::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GL_TRUE);
+
+	Input::setKey(key, action);
+}
+
+void Display::cursor_pos_callback(GLFWwindow* window, double x, double y)
+{
+	Input::setMousePos(x, y);
+}
+
+void Display::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	Input::setMouseButton(button, action);
+}
+
+void Display::cursor_enter_callback(GLFWwindow* window, int entered)
+{
+	Input::setCursorWithinBounds(entered);
 }

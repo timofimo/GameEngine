@@ -45,6 +45,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>.\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -61,6 +62,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>.\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -79,6 +81,9 @@
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Components\Script\Movement.cpp" />
+    <ClCompile Include="Input.cpp" />
+    <ClCompile Include="MTLLoader.cpp" />
+    <ClCompile Include="Shaders\AmbientShader.cpp" />
     <ClCompile Include="Shaders\InstanceAmbientShader.cpp" />
     <ClCompile Include="Shaders\InstanceDirectionalShader.cpp" />
     <ClCompile Include="Shaders\InstancePointShader.cpp" />
@@ -110,6 +115,9 @@
     <ClInclude Include="Components\GameComponent.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Components\Script\Movement.h" />
+    <ClInclude Include="Input.h" />
+    <ClInclude Include="MTLLoader.h" />
+    <ClInclude Include="Shaders\AmbientShader.h" />
     <ClInclude Include="Shaders\InstanceAmbientShader.h" />
     <ClInclude Include="Shaders\InstanceDirectionalShader.h" />
     <ClInclude Include="Shaders\InstancePointShader.h" />
