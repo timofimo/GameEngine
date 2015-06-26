@@ -21,6 +21,7 @@ public:
 	glm::vec3 getAttenuation();
 	void setAttenuation(glm::vec3 attenuation);
 	float getRange();
+	float getRange(float lightAmount);
 	glm::vec3 getPosition();
 
 	virtual void updateUniforms(Shader* shader);

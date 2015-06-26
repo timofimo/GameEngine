@@ -5,6 +5,8 @@
 
 class ParentScript : public ScriptComponent
 {
+private:
+	float m_time;
 public:
 	ParentScript();
 	~ParentScript();

@@ -14,16 +14,11 @@ private:
 	std::vector<SpotLight*> m_spotLights;
 
 	Display m_display;
-	/*enum Shaders
-	{
-		SIMPLE_SHADER,
-		INSTANCE_SHADER,
-		NUM_SHADERS
-	}; Shader* m_shaders[NUM_SHADERS];*/
 	enum Shaders
 	{
 		AMBIENT_SHADER,
 		DIRECTIONAL_SHADER,
+		DIRECTIONAL_SHADOW_SHADER,
 		POINT_SHADER,
 		SPOT_SHADER,
 		NUM_SHADERS
@@ -51,6 +46,11 @@ public:
 private:
 	void render(MeshRenderer* meshRenderer, Shader* shader);
 	void renderInstanced(MeshRenderer* meshRenderer, GLuint ModelMatrixID);
-	void renderInstancedPointLight(MeshRenderer* meshRenderer, GLuint ModelMatrixID, glm::vec3 position, float range);
+	void renderInstancedRangedLights(MeshRenderer* meshRenderer, GLuint ModelMatrixID, glm::vec3 position, float range);
+
+	std::vector<LightComponent*> getClosestLights(glm::vec3 point);
+	void renderDirectionalShadowMap(DirectionalLight* l);
+	void renderSpotShadowMap(SpotLight* l);
+	void renderPointShadowMap(PointLight* l);
 };
 

@@ -2,20 +2,21 @@
 
 #include "Components.h"
 
-#define FPS 6000.0f
+#define FPS 60.0f
 
 Engine::Engine() : root("Root")
 {
 	/*
-	The last thing added was the culling for the spot light and the input class.
+	The last thing added was the culling for the point lights and the input class.
 	The next step is to add culling for spot lights and maybe directional lights (by giving them a range and position).
 	After that you can choose between implementing materials/improve obj loader, deferred shading or making standalone light objects( don't delete the components).
 	*/
+
 	std::string meshes[] = { "res/coffin.obj", "res/sack.obj", "res/box.obj", "res/tree.obj", "res/dragonlp.obj", "res/chest.obj", "res/grassPatch.obj" };
 	std::string textures[] = { "res/stone.png", "res/grass.png", "res/sack.png", "res/coffin.png", "res/chest.png", "res/grassSprite.png", "res/treeTexture.png" };
 	//Camera
 	GameObject* camera = new GameObject("Camera");
-	camera->getLocalTransform().setPosition(glm::vec3(-80.0f, 80.0f, 0.0f));
+	camera->getLocalTransform().setPosition(glm::vec3(-50.0f, 50.0f, 0.0f));
 	camera->getLocalTransform().setRotation(glm::radians(glm::vec3(-45.0f, 0.0f, 0.0f)));
 	Camera* camComponent = new Camera();
 	renderingEngine.setCamera(camComponent);
@@ -23,27 +24,61 @@ Engine::Engine() : root("Root")
 	root.addChild(camera);	
 
 	GameObject* plane = new GameObject("Plane");
-	plane->getLocalTransform().setScale(glm::vec3(300.0f, 1.0f, 300.0f));
-	plane->addComponent(MeshRenderer::getMeshRenderer("res/plane.obj", "res/grass.png", &renderingEngine, plane));
-	plane->addComponent(new PointLight("pointLight", glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.1f, 0.0f), 0.0f, 0.0f, 0.01f, &renderingEngine));
+	plane->getLocalTransform().setScale(glm::vec3(25.0f, 1.0f, 25.0f));
+	plane->addComponent(MeshRenderer::getMeshRenderer("res/plane.obj", "res/white.png", &renderingEngine, plane));
 	root.addChild(plane);
-	PointLight* p = (PointLight*)plane->getComponent("pointLight");
-	std::cout << p->getRange() << std::endl;
 
-	for (unsigned int i = 0; i < 1500; i++)
+	GameObject* light = new GameObject("light");
+	light->addComponent(new PointLight("pointlight", glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.5f, &renderingEngine));
+	light->addComponent(new LightMovementScript());
+	root.addChild(light);
+
+	GameObject* light2 = new GameObject("light2");
+	light2->addComponent(new DirectionalLight("directionalLight", glm::vec3(1.0f, 0.0f, 0.0f), 1.0f, glm::vec3(0.5f, -1.0f, 0.0f), &renderingEngine));
+	root.addChild(light2);
+
+	GameObject* light3 = new GameObject("light3");
+	light3->addComponent(new PointLight("pointlight2", glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(10.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.5f, &renderingEngine));
+	light3->addComponent(new LightMovementScript());
+	root.addChild(light3);
+
+	GameObject* light4 = new GameObject("light4");
+	light4->addComponent(new PointLight("pointlight3", glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(-10.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.5f, &renderingEngine));
+	light4->addComponent(new LightMovementScript());
+	root.addChild(light4);
+
+	/*GameObject* sphere = new GameObject("sphere");
+	sphere->getLocalTransform().translate(glm::vec3(15.0f, 1.0f, 0.0f));
+	sphere->addComponent(MeshRenderer::getMeshRenderer("res/dragonlp.obj", "res/white.png", &renderingEngine, sphere));
+	//sphere->addComponent(new ParentScript());
+	root.addChild(sphere);*/
+
+	/*for (int i = 0; i <= 1; i++)
 	{
-		GameObject* tree = new GameObject("tree");
-		glm::vec3 position = glm::vec3((float)(rand() % 600), 0.0f, (float)(rand() % 600)) - plane->getLocalTransform().scale();
-		tree->getLocalTransform().setPosition(position);
-		unsigned int m = rand() % 7;
-		unsigned int t = rand() % 7;
-		tree->addComponent(MeshRenderer::getMeshRenderer("res/tree.obj", "res/treeTexture.png", &renderingEngine, tree));
-		root.addChild(tree);
+		GameObject* light = new GameObject("light");
+		light->addComponent(new PointLight("pointlight", glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(i * 5.0f - 25.0f, 1.0f, 0.0f), 0.0f, 0.0f, 0.5f, &renderingEngine));
+		light->addComponent(new ParentScript());
+		root.addChild(light);
 	}
 
-	GameObject* directionalLight = new GameObject("DirectionalLight");
-	directionalLight->addComponent(new DirectionalLight("directionalLight", glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(0.0f, -10.0f, 1.0f), &renderingEngine));
-	root.addChild(directionalLight);
+	for (int i = 0; i <= 1; i++)
+	{
+		GameObject* light = new GameObject("light");
+		light->addComponent(new SpotLight("spotlight", glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, i * 5.0f - 25.0f), glm::vec3(1.0f, -1.0f, 0.0f), 0.7f, 0.0f, 0.0f, 0.5f, &renderingEngine));
+		light->addComponent(new ParentScript());
+		root.addChild(light);
+	}*/
+
+	for (int x = -25; x <= 25; x += 5)
+	{
+		for (int z = -25; z <= 25; z += 5)
+		{
+			GameObject* sphere = new GameObject("sphere");
+			sphere->getLocalTransform().translate(glm::vec3((float)x, 1.0f, (float)z));
+			sphere->addComponent(MeshRenderer::getMeshRenderer("res/sphere.obj", "res/white.png", &renderingEngine, sphere));
+			root.addChild(sphere);
+		}
+	}
 
 	run();
 }

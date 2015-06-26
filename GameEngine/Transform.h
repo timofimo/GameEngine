@@ -45,5 +45,7 @@ public:
 
 	bool hasChanged(bool reset);
 	void setHasChanged(bool changed);
+
+	glm::vec3 transformPoint(glm::vec3 point);
 };
 

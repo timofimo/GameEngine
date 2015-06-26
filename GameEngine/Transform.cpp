@@ -176,3 +176,12 @@ void Transform::setHasChanged(bool changed)
 {
 	m_hasChanged = changed;
 }
+
+glm::vec3 Transform::transformPoint(glm::vec3 point)
+{
+	glm::vec3 result = point;
+	result *= m_scl;
+	result = m_qrot * result;
+	result += m_pos;
+	return result;
+}

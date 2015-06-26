@@ -25,15 +25,13 @@ Camera::~Camera()
 
 void Camera::update(float deltaTime)
 {
-	/*if (Input::getKey(GLFW_KEY_UP))
-		m_parent->getLocalTransform().rotate(glm::vec3(1.0f, 0.0f, 0.0f) * deltaTime);
-	if (Input::getKey(GLFW_KEY_DOWN))
-		m_parent->getLocalTransform().rotate(glm::vec3(-1.0f, 0.0f, 0.0f) * deltaTime);
-	if (Input::getKey(GLFW_KEY_LEFT))
-		m_parent->getLocalTransform().rotate(glm::vec3(0.0f, -1.0f, 0.0f) * deltaTime);
-	if (Input::getKey(GLFW_KEY_RIGHT))
-		m_parent->getLocalTransform().rotate(glm::vec3(0.0f, 1.0f, 0.0f) * deltaTime);*/
 	glm::vec2 mt = Input::getMouseTranslation();
+	/*if (mt != glm::vec2())
+		std::cout << "X: " << mt.y * deltaTime << " Y: " << -mt.x * deltaTime << std::endl;*/
+	if (glm::abs(mt.x * deltaTime) > 0.1f)
+		std::cout << "X: " << mt.x * deltaTime << " MT: " << mt.x << " DT: " << deltaTime << std::endl;
+	if (glm::abs(mt.y * deltaTime) > 0.1f)
+		std::cout << "Y: " << mt.y * deltaTime << " MT: " << mt.y << " DT: " << deltaTime << std::endl;
 	m_parent->getLocalTransform().rotate(glm::vec3(mt.y, -mt.x, 0.0f) * deltaTime);
 
 	float movementSpeed = 10.0f;

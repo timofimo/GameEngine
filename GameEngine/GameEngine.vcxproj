@@ -82,6 +82,8 @@
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Components\Script\Movement.cpp" />
     <ClCompile Include="Input.cpp" />
+    <ClCompile Include="Components\Script\LightMovementScript.cpp" />
+    <ClCompile Include="Shaders\InstanceDirectionalShadowShader.cpp" />
     <ClCompile Include="MTLLoader.cpp" />
     <ClCompile Include="Shaders\AmbientShader.cpp" />
     <ClCompile Include="Shaders\InstanceAmbientShader.cpp" />
@@ -116,6 +118,8 @@
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Components\Script\Movement.h" />
     <ClInclude Include="Input.h" />
+    <ClInclude Include="Components\Script\LightMovementScript.h" />
+    <ClInclude Include="Shaders\InstanceDirectionalShadowShader.h" />
     <ClInclude Include="MTLLoader.h" />
     <ClInclude Include="Shaders\AmbientShader.h" />
     <ClInclude Include="Shaders\InstanceAmbientShader.h" />

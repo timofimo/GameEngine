@@ -4,6 +4,7 @@
 #include "Components/Script/HelloWorld.h"
 #include "Components/Script/ParentScript.h"
 #include "Components/Script/Movement.h"
+#include "Components/Script/LightMovementScript.h"
 
 #include "Components/Render/MeshRenderer.h"
 

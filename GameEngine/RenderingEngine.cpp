@@ -5,6 +5,7 @@
 #include "Shaders/InstanceShader.h"
 #include "Shaders/InstanceAmbientShader.h"
 #include "Shaders/InstanceDirectionalShader.h"
+#include "Shaders/InstanceDirectionalShadowShader.h"
 #include "Shaders/InstancePointShader.h"
 #include "Shaders/InstanceSpotShader.h"
 
@@ -12,11 +13,12 @@
 
 RenderingEngine::RenderingEngine() : m_display(960, 540, "OpenGL Window", false, false)
 {
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// initialize all shaders here
 	m_shaders[AMBIENT_SHADER] = new InstanceAmbientShader();
 	m_shaders[DIRECTIONAL_SHADER] = new InstanceDirectionalShader();
+	m_shaders[DIRECTIONAL_SHADOW_SHADER] = new InstanceDirectionalShadowShader();
 	m_shaders[POINT_SHADER] = new InstancePointShader();
 	m_shaders[SPOT_SHADER] = new InstanceSpotShader();
 
@@ -83,8 +85,7 @@ void RenderingEngine::renderScene()
 
 		for each (MeshRenderer* mr in m_meshRenderers)
 		{
-			//renderInstanced(mr, ((InstancePointShader*)m_activeShader)->getModelMatrixID());
-			renderInstancedPointLight(mr, ((InstancePointShader*)m_activeShader)->getModelMatrixID(), light->getPosition(), light->getRange());
+			renderInstancedRangedLights(mr, ((InstancePointShader*)m_activeShader)->getModelMatrixID(), light->getPosition(), light->getRange(0.01f));
 		}
 	}	
 
@@ -97,7 +98,7 @@ void RenderingEngine::renderScene()
 
 		for each (MeshRenderer* mr in m_meshRenderers)
 		{
-			renderInstanced(mr, ((InstanceSpotShader*)m_activeShader)->getModelMatrixID());
+			renderInstancedRangedLights(mr, ((InstanceSpotShader*)m_activeShader)->getModelMatrixID(), light->getPosition(), light->getRange());
 		}
 	}
 	
@@ -216,7 +217,7 @@ void RenderingEngine::renderInstanced(MeshRenderer* meshRenderer, GLuint ModelMa
 	for each (GameObject* parent in meshRenderer->getParents())
 	{
 		Transform t = parent->getWorldTransform(false);
-		
+
 		if (m_activeCamera->sphereInFrustum(t.position() + meshRenderer->getMesh()->getBoundingSphereCenter() * t.scale(), meshRenderer->getMesh()->getRadius() * t.scalef()))
 			instanceMatrices.push_back(parent->getWorldTransform(true).modelMatrix());
 	}
@@ -235,7 +236,7 @@ void RenderingEngine::renderInstanced(MeshRenderer* meshRenderer, GLuint ModelMa
 	}
 }
 
-void RenderingEngine::renderInstancedPointLight(MeshRenderer* meshRenderer, GLuint ModelMatrixID, glm::vec3 position, float range)
+void RenderingEngine::renderInstancedRangedLights(MeshRenderer* meshRenderer, GLuint ModelMatrixID, glm::vec3 position, float range)
 {
 	std::vector<glm::mat4> instanceMatrices;
 	for each (GameObject* parent in meshRenderer->getParents())
@@ -243,8 +244,13 @@ void RenderingEngine::renderInstancedPointLight(MeshRenderer* meshRenderer, GLui
 		Transform t = parent->getWorldTransform(false);
 
 		if (m_activeCamera->sphereInFrustum(t.position() + meshRenderer->getMesh()->getBoundingSphereCenter() * t.scale(), meshRenderer->getMesh()->getRadius() * t.scalef()))
-			if (glm::distance(t.position() + meshRenderer->getMesh()->getBoundingSphereCenter() * t.scale(), position) <= range + meshRenderer->getMesh()->getRadius() * t.scalef())
+		{
+			float distance = glm::distance(t.position() + meshRenderer->getMesh()->getBoundingSphereCenter() * t.scale(), position);
+			float meshRadius = meshRenderer->getMesh()->getRadius() * t.scalef();
+
+			if (distance <= range + meshRadius)
 				instanceMatrices.push_back(parent->getWorldTransform(true).modelMatrix());
+		}
 	}
 
 	if (instanceMatrices.size() > 0)
@@ -259,3 +265,136 @@ void RenderingEngine::renderInstancedPointLight(MeshRenderer* meshRenderer, GLui
 		meshRenderer->getTexture()->unbind(0);
 	}
 }
+
+std::vector<LightComponent*> RenderingEngine::getClosestLights(glm::vec3 point)
+{
+	int maxShadowMappedLights = 3;
+	std::vector<LightComponent*> closestLights;
+	for each (LightComponent* l in m_directionalLights)
+	{
+		closestLights.push_back(l);
+		if (closestLights.size() >= maxShadowMappedLights)
+			return closestLights;
+	}
+
+	for each (SpotLight* l in m_spotLights)
+	{
+		int index = 0;
+		float distance = glm::distance(l->getPosition(), point);
+		bool lightAdded = false;
+		for each (LightComponent* cl in closestLights)
+		{
+			float distance2 = cl->getType() == LightComponent::DIRECTIONAL_LIGHT ? 0.0f : glm::distance(((SpotLight*)cl)->getPosition(), point);
+			if (distance < distance2)
+			{
+				closestLights.insert(closestLights.begin() + index, l);
+				lightAdded = true;
+				break;
+			}
+			index++;
+		}
+
+		if (!lightAdded && closestLights.size() < maxShadowMappedLights)
+		{
+			closestLights.push_back(l);
+			lightAdded = true;
+		}
+
+		if (lightAdded && closestLights.size() >= maxShadowMappedLights)
+			closestLights.resize(maxShadowMappedLights);
+	}
+
+	for each (PointLight* l in m_pointLights)
+	{
+		int index = 0;
+		float distance = glm::distance(l->getPosition(), point);
+		bool lightAdded = false;
+		for each (LightComponent* cl in closestLights)
+		{
+			float distance2 = cl->getType() == LightComponent::DIRECTIONAL_LIGHT ? 0.0f : glm::distance(((SpotLight*)cl)->getPosition(), point);
+			if (distance < distance2)
+			{
+				closestLights.insert(closestLights.begin() + index, l);
+				lightAdded = true;
+				break;
+			}
+			index++;
+		}
+
+		if (!lightAdded && closestLights.size() < maxShadowMappedLights)
+		{
+			closestLights.push_back(l);
+			lightAdded = true;
+		}
+
+		if (lightAdded && closestLights.size() >= maxShadowMappedLights)
+			closestLights.resize(maxShadowMappedLights);
+	}
+
+	return closestLights;
+}
+
+void RenderingEngine::renderDirectionalShadowMap(DirectionalLight* l)
+{
+	GLuint frameBuffer = 0;
+	glGenFramebuffers(1, &frameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+	GLuint depthTexture;
+	glGenTextures(1, &depthTexture);
+	glBindTexture(GL_TEXTURE_2D, depthTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		std::cerr << "RENDERINGENGINE: getShadowMap" << std::endl;
+		return;
+	}
+
+	//Light matrices
+	m_activeShader = m_shaders[DIRECTIONAL_SHADOW_SHADER];
+	m_activeShader->bind();
+	l->updateShadowUniforms(m_activeShader, m_activeCamera->getLocalTransform().position());
+
+	//Render the scene
+	for each(MeshRenderer* meshRenderer in m_meshRenderers)
+	{
+		std::vector<glm::mat4> instanceMatrices;
+		if (meshRenderer->parentsTransformChanged())
+		{
+			for each (GameObject* parent in meshRenderer->getParents())	
+			{
+				instanceMatrices.push_back(parent->getWorldTransform(true).modelMatrix());
+			}
+		}
+
+		if (instanceMatrices.size() > 0)
+		{
+			meshRenderer->getMesh()->bind();
+
+			meshRenderer->getMesh()->drawInstanced(instanceMatrices, ((InstanceDirectionalShadowShader*)m_activeShader)->getModelMatrixID());
+
+			meshRenderer->getMesh()->unbind();
+		}
+	}
+
+	l->setShadowMap(depthTexture);
+}
+
+void RenderingEngine::renderSpotShadowMap(SpotLight* l)
+{
+	std::cout << l->getName().c_str() << std::endl;
+}
+
+void RenderingEngine::renderPointShadowMap(PointLight* l)
+{
+	std::cout << l->getName().c_str() << std::endl;
+}
+
+
