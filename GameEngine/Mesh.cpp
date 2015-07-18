@@ -13,7 +13,7 @@ Mesh::Mesh(const std::string file, std::vector<Vertex> vertices, std::vector<uns
 
 	glm::vec3 dimensions = m_max - m_min;
 	float bb = dimensions.x * dimensions.y * dimensions.z;
-	float bs = (4 / 3)*glm::pi<float>()*glm::pow(m_radius, 3);
+	float bs = (4 / 3)*glm::pi<float>()*glm::pow(radius, 3);
 	m_boundingBoxIsSmaller = bb < bs;
 
 	m_vertices = vertices;

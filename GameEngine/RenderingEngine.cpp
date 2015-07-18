@@ -1,13 +1,7 @@
 #include "RenderingEngine.h"
 
 /*local includes*/
-#include "Shaders/SimpleShader.h"
-#include "Shaders/InstanceShader.h"
-#include "Shaders/InstanceAmbientShader.h"
-#include "Shaders/InstanceDirectionalShader.h"
-#include "Shaders/InstanceDirectionalShadowShader.h"
-#include "Shaders/InstancePointShader.h"
-#include "Shaders/InstanceSpotShader.h"
+#include "Shaders/Shader.h"
 
 #define AMBIENT_COLOR glm::vec3(0.1f, 0.1f, 0.1f)
 
@@ -16,13 +10,20 @@ RenderingEngine::RenderingEngine() : m_display(960, 540, "OpenGL Window", false,
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// initialize all shaders here
-	m_shaders[AMBIENT_SHADER] = new InstanceAmbientShader();
-	m_shaders[DIRECTIONAL_SHADER] = new InstanceDirectionalShader();
-	m_shaders[DIRECTIONAL_SHADOW_SHADER] = new InstanceDirectionalShadowShader();
-	m_shaders[POINT_SHADER] = new InstancePointShader();
-	m_shaders[SPOT_SHADER] = new InstanceSpotShader();
+	m_shaders[SIMPLE_SHADER] = new Shader("Simple", "res/shaders/simpleVertexShader.glsl", "res/shaders/simpleFragmentShader.glsl");
+	m_shaders[AMBIENT_SHADER] = new Shader("Ambient", "res/shaders/instanceVertexShader.glsl", "res/shaders/ambientFragmentShader.glsl");
+	m_shaders[DIRECTIONAL_SHADER] = new Shader("Directional", "res/shaders/instanceVertexShader.glsl", "res/shaders/directionalFragmentShader.glsl");
+	m_shaders[POINT_SHADER] = new Shader("Point", "res/shaders/instanceVertexShader.glsl", "res/shaders/pointFragmentShader.glsl");
+	m_shaders[SPOT_SHADER] = new Shader("Spot", "res/shaders/instanceVertexShader.glsl", "res/shaders/spotFragmentShader.glsl");
+	m_shaders[SHADOWMAP_SHADER] = new Shader("Shadowmap", "res/shaders/shadowMapVertexShader.glsl", "res/shaders/shadowMapFragmentShader.glsl");
+	m_shaders[SHADOW_DIRECTIONAL_SHADER] = new Shader("Shadow directional", "res/shaders/shadowVertexShader.glsl", "res/shaders/shadowDirectionalFragmentShader.glsl");
+	m_shaders[SHADOW_SPOT_SHADER] = new Shader("Shadow spot", "res/shaders/shadowVertexShader.glsl", "res/shaders/shadowSpotFragmentShader.glsl");
 
 	m_activeShader = m_shaders[AMBIENT_SHADER];
+
+	m_frameBuffer = new FrameBuffer(Display::getWidth(), Display::getHeight(), 2, true);
+	for (int i = 0; i < MAX_SHADOWS; i++)
+		m_shadowFrameBuffer[i] = new FrameBuffer(4096, 4096, 1, true);
 }
 
 
@@ -32,7 +33,29 @@ RenderingEngine::~RenderingEngine()
 
 void RenderingEngine::renderScene()
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	std::vector<LightComponent*> closestLights = getClosestLights(m_activeCamera->getLocalTransform().position());
+	int index = 0;
+	for each(LightComponent* light in closestLights)
+	{
+		m_shadowFrameBuffer[index]->bindAsRenderTarget();
+
+		m_activeShader = m_shaders[AMBIENT_SHADER];
+		m_activeShader->bind();
+
+		m_activeShader->setUniform("VPMatrix", light->getDepthMVP());
+		
+		glFrontFace(GL_CW);
+		for each (MeshRenderer* mr in m_meshRenderers)
+		{
+			renderShadowMapInstanced(mr, m_activeShader->getBufferID("ModelMatrix"), light);
+		}
+		glFrontFace(GL_CCW);
+
+		light->setShadowMapIndex(index);
+		index++;
+	}
+
+	m_frameBuffer->bindAsRenderTarget();
 
 	if (!m_activeShader || !m_activeCamera)
 	{
@@ -43,17 +66,17 @@ void RenderingEngine::renderScene()
 	for each (Shader* s in m_shaders)
 	{
 		s->bind();
-		s->updateVPMatrix(m_activeCamera->getVPMatrix());
+		s->setUniform("VPMatrix", m_activeCamera->getVPMatrix());
 	}
-
+	 
 	//ambient pass
 	m_activeShader = m_shaders[AMBIENT_SHADER];
 	m_activeShader->bind();
 
-	((InstanceAmbientShader*)m_activeShader)->setAmbientColor(AMBIENT_COLOR);
+	m_activeShader->setUniform("ambientColor", AMBIENT_COLOR);
 	for each (MeshRenderer* mr in m_meshRenderers)
 	{
-		renderInstanced(mr, ((InstanceAmbientShader*)m_activeShader)->getModelMatrixID());
+		renderInstanced(mr, m_activeShader->getBufferID("ModelMatrix"));
 	}
 
 	//set options
@@ -67,11 +90,33 @@ void RenderingEngine::renderScene()
 	m_activeShader->bind();
 	for each (DirectionalLight* light in m_directionalLights)
 	{
-		light->updateUniforms(m_activeShader);
-
-		for each (MeshRenderer* mr in m_meshRenderers)
+		if (light->getShadowMapIndex() != -1)
 		{
-			renderInstanced(mr, ((InstanceDirectionalShader*)m_activeShader)->getModelMatrixID());
+			m_activeShader = m_shaders[SHADOW_DIRECTIONAL_SHADER];
+			m_activeShader->bind();
+			light->updateUniforms(m_activeShader);
+			m_activeShader->setUniform("depthBiasMVP", light->getDepthBias());
+			m_activeShader->setSamplerID("shadowMap", 1);
+			m_activeShader->setUniform("softShadow", light->castsSoftShadows());
+			m_shadowFrameBuffer[light->getShadowMapIndex()]->bindTexture(0, 1);
+
+			for each (MeshRenderer* mr in m_meshRenderers)
+			{
+				renderInstanced(mr, m_activeShader->getBufferID("ModelMatrix"));
+			}
+
+			m_activeShader = m_shaders[DIRECTIONAL_SHADER];
+			m_activeShader->bind();
+			light->setShadowMapIndex(-1);
+		}
+		else
+		{
+			light->updateUniforms(m_activeShader);
+
+			for each (MeshRenderer* mr in m_meshRenderers)
+			{
+				renderInstanced(mr, m_activeShader->getBufferID("ModelMatrix"));
+			}
 		}
 	}	
 
@@ -85,7 +130,7 @@ void RenderingEngine::renderScene()
 
 		for each (MeshRenderer* mr in m_meshRenderers)
 		{
-			renderInstancedRangedLights(mr, ((InstancePointShader*)m_activeShader)->getModelMatrixID(), light->getPosition(), light->getRange(0.01f));
+			renderInstanced(mr, m_activeShader->getBufferID("ModelMatrix"), light);
 		}
 	}	
 
@@ -94,11 +139,33 @@ void RenderingEngine::renderScene()
 	m_activeShader->bind();
 	for each (SpotLight* light in m_spotLights)
 	{
-		light->updateUniforms(m_activeShader);
-
-		for each (MeshRenderer* mr in m_meshRenderers)
+		if (light->getShadowMapIndex() != -1)
 		{
-			renderInstancedRangedLights(mr, ((InstanceSpotShader*)m_activeShader)->getModelMatrixID(), light->getPosition(), light->getRange());
+			m_activeShader = m_shaders[SHADOW_SPOT_SHADER];
+			m_activeShader->bind();
+			light->updateUniforms(m_activeShader);
+			m_activeShader->setUniform("depthBiasMVP", light->getDepthBias());
+			m_activeShader->setSamplerID("shadowMap", 1);
+			m_activeShader->setUniform("softShadow", light->castsSoftShadows());
+			m_shadowFrameBuffer[light->getShadowMapIndex()]->bindTexture(0, 1);
+
+			for each (MeshRenderer* mr in m_meshRenderers)
+			{
+				renderInstanced(mr, m_activeShader->getBufferID("ModelMatrix"));
+			}
+
+			m_activeShader = m_shaders[SPOT_SHADER];
+			m_activeShader->bind();
+			light->setShadowMapIndex(-1);
+		}
+		else
+		{
+			light->updateUniforms(m_activeShader);
+
+			for each (MeshRenderer* mr in m_meshRenderers)
+			{
+				renderInstanced(mr, m_activeShader->getBufferID("ModelMatrix"), light);
+			}
 		}
 	}
 	
@@ -106,6 +173,8 @@ void RenderingEngine::renderScene()
 	glDepthFunc(GL_LESS);
 	glDepthMask(GL_TRUE);
 	glDisable(GL_BLEND);
+
+	drawPlane();
 
 	glfwSwapBuffers(m_display.getWindow());
 }
@@ -187,39 +256,37 @@ void RenderingEngine::removeLight(LightComponent* light)
 	}	
 }
 
-void RenderingEngine::render(MeshRenderer* meshRenderer, Shader* shader)
+Camera* RenderingEngine::getCamera()
 {
-	/*meshRenderer->getMesh()->bind();
-	meshRenderer->getTexture()->bind(0);
-
-	for each (GameObject* parent in meshRenderer->getParents())
-	{
-		shader->UpdateModelMatrix(parent->getWorldTransform().modelMatrix());
-		meshRenderer->getMesh()->draw();
-	}
-
-	meshRenderer->getMesh()->unbind();
-	meshRenderer->getTexture()->unbind(0);*/
+	return m_activeCamera;
 }
 
-void RenderingEngine::renderInstanced(MeshRenderer* meshRenderer, GLuint ModelMatrixID)
+float RenderingEngine::getAmbientIntensity()
+{
+	return glm::max(AMBIENT_COLOR.r, glm::max(AMBIENT_COLOR.g, AMBIENT_COLOR.b));
+}
+
+void RenderingEngine::renderInstanced(MeshRenderer* meshRenderer, GLuint ModelMatrixID, PointLight* rangedLight/* = nullptr*/)
 {
 	//double startTime = glfwGetTime();
-	/*std::vector<glm::mat4> instanceMatrices;
-	if (meshRenderer->parentsTransformChanged())
-	{
-		for each (GameObject* parent in meshRenderer->getParents())						//old way - without frustum culling
-		{
-			instanceMatrices.push_back(parent->getWorldTransform(true).modelMatrix());
-		}
-	}*/
 	std::vector<glm::mat4> instanceMatrices;	
 	for each (GameObject* parent in meshRenderer->getParents())
 	{
 		Transform t = parent->getWorldTransform(false);
 
 		if (m_activeCamera->sphereInFrustum(t.position() + meshRenderer->getMesh()->getBoundingSphereCenter() * t.scale(), meshRenderer->getMesh()->getRadius() * t.scalef()))
-			instanceMatrices.push_back(parent->getWorldTransform(true).modelMatrix());
+		{
+			if (rangedLight != nullptr)
+			{
+				float distance = glm::distance(t.position() + meshRenderer->getMesh()->getBoundingSphereCenter() * t.scale(), rangedLight->getPosition());
+				float meshRadius = meshRenderer->getMesh()->getRadius() * t.scalef();
+
+				if (distance <= rangedLight->getRange(0.01f) + meshRadius)
+					instanceMatrices.push_back(parent->getWorldTransform(true).modelMatrix());
+			}
+			else
+				instanceMatrices.push_back(parent->getWorldTransform(true).modelMatrix());
+		}
 	}
 	//std::cout << meshRenderer->getName().c_str() << ": " << glfwGetTime() - startTime << std::endl;
 
@@ -228,7 +295,6 @@ void RenderingEngine::renderInstanced(MeshRenderer* meshRenderer, GLuint ModelMa
 		meshRenderer->getMesh()->bind();
 		meshRenderer->getTexture()->bind(0);
 
-
 		meshRenderer->getMesh()->drawInstanced(instanceMatrices, ModelMatrixID);
 
 		meshRenderer->getMesh()->unbind();
@@ -236,28 +302,35 @@ void RenderingEngine::renderInstanced(MeshRenderer* meshRenderer, GLuint ModelMa
 	}
 }
 
-void RenderingEngine::renderInstancedRangedLights(MeshRenderer* meshRenderer, GLuint ModelMatrixID, glm::vec3 position, float range)
+
+void RenderingEngine::renderShadowMapInstanced(MeshRenderer* meshRenderer, GLuint ModelMatrixID, LightComponent* light)
 {
+	//double startTime = glfwGetTime();
+
+	PhysicsComponent* cullingObject = 0;
+
+	if (light->getType() == LightComponent::DIRECTIONAL_LIGHT)
+		cullingObject = ((DirectionalLight*)light)->getCullingObject();
+	else if (light->getType() == LightComponent::SPOT_LIGHT)
+		cullingObject = ((SpotLight*)light)->getCullingObject();
+
 	std::vector<glm::mat4> instanceMatrices;
 	for each (GameObject* parent in meshRenderer->getParents())
 	{
 		Transform t = parent->getWorldTransform(false);
 
-		if (m_activeCamera->sphereInFrustum(t.position() + meshRenderer->getMesh()->getBoundingSphereCenter() * t.scale(), meshRenderer->getMesh()->getRadius() * t.scalef()))
+		SphereComponent boundingSphere = SphereComponent(meshRenderer->getMesh()->getBoundingSphereCenter() + t.position(), meshRenderer->getMesh()->getRadius() * t.scalef());
+		if (cullingObject->checkCollision(&boundingSphere))
 		{
-			float distance = glm::distance(t.position() + meshRenderer->getMesh()->getBoundingSphereCenter() * t.scale(), position);
-			float meshRadius = meshRenderer->getMesh()->getRadius() * t.scalef();
-
-			if (distance <= range + meshRadius)
-				instanceMatrices.push_back(parent->getWorldTransform(true).modelMatrix());
+			instanceMatrices.push_back(parent->getWorldTransform(false).modelMatrix());
 		}
 	}
-
+	//std::cout << meshRenderer->getName().c_str() << ": " << glfwGetTime() - startTime << std::endl;
+	std::cout << light->getType() << ": " << instanceMatrices.size() << std::endl;
 	if (instanceMatrices.size() > 0)
 	{
 		meshRenderer->getMesh()->bind();
 		meshRenderer->getTexture()->bind(0);
-
 
 		meshRenderer->getMesh()->drawInstanced(instanceMatrices, ModelMatrixID);
 
@@ -268,133 +341,66 @@ void RenderingEngine::renderInstancedRangedLights(MeshRenderer* meshRenderer, GL
 
 std::vector<LightComponent*> RenderingEngine::getClosestLights(glm::vec3 point)
 {
-	int maxShadowMappedLights = 3;
+	unsigned int maxShadowMappedLights = 3;
 	std::vector<LightComponent*> closestLights;
 	for each (LightComponent* l in m_directionalLights)
 	{
-		closestLights.push_back(l);
-		if (closestLights.size() >= maxShadowMappedLights)
-			return closestLights;
+		if (l->isShadowCaster())
+		{
+			closestLights.push_back(l);
+			if (closestLights.size() >= maxShadowMappedLights)
+				return closestLights;
+		}
 	}
 
 	for each (SpotLight* l in m_spotLights)
 	{
-		int index = 0;
-		float distance = glm::distance(l->getPosition(), point);
-		bool lightAdded = false;
-		for each (LightComponent* cl in closestLights)
+		if (l->isShadowCaster())
 		{
-			float distance2 = cl->getType() == LightComponent::DIRECTIONAL_LIGHT ? 0.0f : glm::distance(((SpotLight*)cl)->getPosition(), point);
-			if (distance < distance2)
+			int index = 0;
+			float distance = glm::distance(l->getPosition(), point);
+			bool lightAdded = false;
+			for each (LightComponent* cl in closestLights)
 			{
-				closestLights.insert(closestLights.begin() + index, l);
-				lightAdded = true;
-				break;
+				float distance2 = cl->getType() == LightComponent::DIRECTIONAL_LIGHT ? 0.0f : glm::distance(((SpotLight*)cl)->getPosition(), point);
+				if (distance < distance2)
+				{
+					closestLights.insert(closestLights.begin() + index, l);
+					lightAdded = true;
+					break;
+				}
+				index++;
 			}
-			index++;
-		}
 
-		if (!lightAdded && closestLights.size() < maxShadowMappedLights)
-		{
-			closestLights.push_back(l);
-			lightAdded = true;
-		}
-
-		if (lightAdded && closestLights.size() >= maxShadowMappedLights)
-			closestLights.resize(maxShadowMappedLights);
-	}
-
-	for each (PointLight* l in m_pointLights)
-	{
-		int index = 0;
-		float distance = glm::distance(l->getPosition(), point);
-		bool lightAdded = false;
-		for each (LightComponent* cl in closestLights)
-		{
-			float distance2 = cl->getType() == LightComponent::DIRECTIONAL_LIGHT ? 0.0f : glm::distance(((SpotLight*)cl)->getPosition(), point);
-			if (distance < distance2)
+			if (!lightAdded && closestLights.size() < maxShadowMappedLights)
 			{
-				closestLights.insert(closestLights.begin() + index, l);
+				closestLights.push_back(l);
 				lightAdded = true;
-				break;
 			}
-			index++;
-		}
 
-		if (!lightAdded && closestLights.size() < maxShadowMappedLights)
-		{
-			closestLights.push_back(l);
-			lightAdded = true;
+			if (lightAdded && closestLights.size() >= maxShadowMappedLights)
+				closestLights.resize(maxShadowMappedLights);
 		}
-
-		if (lightAdded && closestLights.size() >= maxShadowMappedLights)
-			closestLights.resize(maxShadowMappedLights);
 	}
 
 	return closestLights;
 }
 
-void RenderingEngine::renderDirectionalShadowMap(DirectionalLight* l)
+void RenderingEngine::drawPlane()
 {
-	GLuint frameBuffer = 0;
-	glGenFramebuffers(1, &frameBuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+	Display::bindAsRenderTarget();
 
-	GLuint depthTexture;
-	glGenTextures(1, &depthTexture);
-	glBindTexture(GL_TEXTURE_2D, depthTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0);
-
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-	{
-		std::cerr << "RENDERINGENGINE: getShadowMap" << std::endl;
-		return;
-	}
-
-	//Light matrices
-	m_activeShader = m_shaders[DIRECTIONAL_SHADOW_SHADER];
+	m_activeShader = m_shaders[SIMPLE_SHADER];
 	m_activeShader->bind();
-	l->updateShadowUniforms(m_activeShader, m_activeCamera->getLocalTransform().position());
 
-	//Render the scene
-	for each(MeshRenderer* meshRenderer in m_meshRenderers)
-	{
-		std::vector<glm::mat4> instanceMatrices;
-		if (meshRenderer->parentsTransformChanged())
-		{
-			for each (GameObject* parent in meshRenderer->getParents())	
-			{
-				instanceMatrices.push_back(parent->getWorldTransform(true).modelMatrix());
-			}
-		}
+	if (Input::getKey(GLFW_KEY_Z))
+		m_shadowFrameBuffer[0]->bindTexture(0, 0);
+	else if (Input::getKey(GLFW_KEY_X))
+		m_frameBuffer->bindTexture(1, 0);
+	else
+		m_frameBuffer->bindTexture(0, 0);
 
-		if (instanceMatrices.size() > 0)
-		{
-			meshRenderer->getMesh()->bind();
-
-			meshRenderer->getMesh()->drawInstanced(instanceMatrices, ((InstanceDirectionalShadowShader*)m_activeShader)->getModelMatrixID());
-
-			meshRenderer->getMesh()->unbind();
-		}
-	}
-
-	l->setShadowMap(depthTexture);
+	Mesh* m = Mesh::getMesh("res/models/1x1planer.obj");
+	m->bind();
+	m->draw();
 }
-
-void RenderingEngine::renderSpotShadowMap(SpotLight* l)
-{
-	std::cout << l->getName().c_str() << std::endl;
-}
-
-void RenderingEngine::renderPointShadowMap(PointLight* l)
-{
-	std::cout << l->getName().c_str() << std::endl;
-}
-
-

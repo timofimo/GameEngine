@@ -3,6 +3,7 @@
 /*local includes*/
 #include "OBJLoader.h"
 #include "Components/Render/RenderComponent.h"
+#include "Components/Physics/SphereComponent.h"
 #include "Vertex.h"
 #include "gl/glew.h"
 

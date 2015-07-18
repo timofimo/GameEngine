@@ -17,7 +17,8 @@ public:
 	{
 		SCRIPT,
 		RENDER,
-		LIGHT
+		LIGHT,
+		PHYSICS,
 	};
 protected:
 	const ComponentType m_type;

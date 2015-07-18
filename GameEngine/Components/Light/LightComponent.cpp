@@ -10,6 +10,7 @@ LightComponent::LightComponent(std::string name, glm::vec3 color, float intensit
 	m_renderingEngine = renderingEngine;
 	m_type = type;
 	m_renderingEngine->addLight(this);
+	m_shadowMapIndex = -1;
 }
 
 
@@ -46,4 +47,36 @@ glm::vec3 LightComponent::getLight()
 LightComponent::LightTypes LightComponent::getType()
 {
 	return m_type;
+}
+
+glm::mat4 LightComponent::getDepthMVP()
+{
+	if (m_type == DIRECTIONAL_LIGHT)
+		calculateDepthMVP();
+	return m_depthMVP;
+}
+
+glm::mat4 LightComponent::getDepthBias()
+{
+	return biasMatrix * getDepthMVP();
+}
+
+void LightComponent::setShadowMapIndex(int map)
+{
+	m_shadowMapIndex = map;
+}
+
+int LightComponent::getShadowMapIndex()
+{
+	return m_shadowMapIndex;
+}
+
+bool LightComponent::isShadowCaster()
+{
+	return m_castsShadows;
+}
+
+bool LightComponent::castsSoftShadows()
+{
+	return m_softShadows;
 }

@@ -21,6 +21,7 @@ public:
 	static unsigned int getWidth();
 	static unsigned int getHeight();
 	static GLFWwindow* getWindow();
+	static void bindAsRenderTarget();
 
 private:
 	static void error_callback(int error, const char* description);

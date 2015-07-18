@@ -102,6 +102,13 @@ GLFWwindow* Display::getWindow()
 	return m_window;
 }
 
+void Display::bindAsRenderTarget()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, m_width, m_height);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
 void Display::error_callback(int error, const char* description)
 {
 	std::cout << "GLFW ERROR: " << description << std::endl;

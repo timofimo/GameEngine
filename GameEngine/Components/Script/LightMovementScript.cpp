@@ -22,4 +22,5 @@ void LightMovementScript::update(float deltaTime)
 	time += deltaTime;
 	Transform t = m_parent->getLocalTransform();
 	m_parent->getLocalTransform().setPosition(glm::vec3(t.position().x, glm::sin(time) * 2.5f + 3.5f, t.position().z));
+	m_parent->getLocalTransform().rotate(glm::radians(glm::vec3(0.0f, 90.0f, 0.0f) * deltaTime));
 }

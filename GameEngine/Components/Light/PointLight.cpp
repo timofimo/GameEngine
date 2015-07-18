@@ -2,12 +2,12 @@
 
 /*local includes*/
 #include "../GameObject.h"
-#include "../Shaders/InstancePointShader.h"
 
 PointLight::PointLight(std::string name, glm::vec3 color, glm::vec3 position, float constant, float linear, float exponent, RenderingEngine* renderingEngine, LightComponent::LightTypes type) : LightComponent(name, color, 1.0f, renderingEngine, type)
 {
 	setAttenuation(glm::vec3(constant, linear, exponent));
 	m_position = position;
+	calculateDepthMVP();
 }
 
 
@@ -92,10 +92,9 @@ glm::vec3 PointLight::getPosition()
 
 void PointLight::updateUniforms(Shader* shader)
 {
-	InstancePointShader* s = (InstancePointShader*)shader;
-	s->setLightColor(getLight());
-	s->setLightPosition(getPosition());
-	s->setLightConstant(m_constant);
-	s->setLightLinear(m_linear);
-	s->setLightExponent(m_exponent);
+	shader->setUniform("lightColor", getLight());
+	shader->setUniform("lightPosition", getPosition());
+	shader->setUniform("lightConstant", m_constant);
+	shader->setUniform("lightLinear", m_linear);
+	shader->setUniform("lightExponent", m_exponent);
 }

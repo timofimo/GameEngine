@@ -6,78 +6,54 @@
 
 Engine::Engine() : root("Root")
 {
-	/*
-	The last thing added was the culling for the point lights and the input class.
-	The next step is to add culling for spot lights and maybe directional lights (by giving them a range and position).
-	After that you can choose between implementing materials/improve obj loader, deferred shading or making standalone light objects( don't delete the components).
+	/*TODO LIST
+		+ add soft shadows to spotlights
+		+ make soft shadows optional for directional and spotlights
+		- make the amount of soft shadow samples taken a uniform
+		- add frustum component to camera
+		- look for stupid code and remove it
 	*/
-
 	std::string meshes[] = { "res/coffin.obj", "res/sack.obj", "res/box.obj", "res/tree.obj", "res/dragonlp.obj", "res/chest.obj", "res/grassPatch.obj" };
 	std::string textures[] = { "res/stone.png", "res/grass.png", "res/sack.png", "res/coffin.png", "res/chest.png", "res/grassSprite.png", "res/treeTexture.png" };
 	//Camera
 	GameObject* camera = new GameObject("Camera");
-	camera->getLocalTransform().setPosition(glm::vec3(-50.0f, 50.0f, 0.0f));
-	camera->getLocalTransform().setRotation(glm::radians(glm::vec3(-45.0f, 0.0f, 0.0f)));
+	camera->getLocalTransform().setPosition(glm::vec3(-3.0f, 1.0f, 0.0f));
+	camera->getLocalTransform().setRotation(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f)));
 	Camera* camComponent = new Camera();
 	renderingEngine.setCamera(camComponent);
 	camera->addComponent(camComponent);
-	root.addChild(camera);	
+	root.addChild(camera);
 
+	GameObject* sphere = new GameObject("sphere");
+	sphere->addComponent(MeshRenderer::getMeshRenderer("res/models/sphere.obj", "res/textures/white.png", &renderingEngine, sphere));
+	sphere->getLocalTransform().setPosition(glm::vec3(0.0f, 1.0f, 0.0f));
+	root.addChild(sphere);
+
+	GameObject* sun = new GameObject("sun");
+	sun->addComponent(new DirectionalLight("sunLight", glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(1.0f, -2.0f, 0.0f), &renderingEngine));
+	((DirectionalLight*)sun->getComponent("sunLight"))->enableShadowCasting(false, 250.0f);
+	root.addChild(sun);
+
+	GameObject* spot = new GameObject("spot");
+	spot->addComponent(new SpotLight("spot", glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, -5.0f), glm::vec3(0.0f, 0.0f, 1.0f), 0.95f, 0.0f, 0.0f, 0.01f, &renderingEngine));
+	((SpotLight*)spot->getComponent("spot"))->enableShadowCasting();
+	root.addChild(spot);
+
+	float width = 100.0f;
+	float height = 100.0f;
 	GameObject* plane = new GameObject("Plane");
-	plane->getLocalTransform().setScale(glm::vec3(25.0f, 1.0f, 25.0f));
-	plane->addComponent(MeshRenderer::getMeshRenderer("res/plane.obj", "res/white.png", &renderingEngine, plane));
+	plane->getLocalTransform().setScale(glm::vec3(width, 1.0f, height));
+	plane->addComponent(MeshRenderer::getMeshRenderer("res/models/plane.obj", "res/textures/ground.png", &renderingEngine, plane));
 	root.addChild(plane);
 
-	GameObject* light = new GameObject("light");
-	light->addComponent(new PointLight("pointlight", glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.5f, &renderingEngine));
-	light->addComponent(new LightMovementScript());
-	root.addChild(light);
-
-	GameObject* light2 = new GameObject("light2");
-	light2->addComponent(new DirectionalLight("directionalLight", glm::vec3(1.0f, 0.0f, 0.0f), 1.0f, glm::vec3(0.5f, -1.0f, 0.0f), &renderingEngine));
-	root.addChild(light2);
-
-	GameObject* light3 = new GameObject("light3");
-	light3->addComponent(new PointLight("pointlight2", glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(10.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.5f, &renderingEngine));
-	light3->addComponent(new LightMovementScript());
-	root.addChild(light3);
-
-	GameObject* light4 = new GameObject("light4");
-	light4->addComponent(new PointLight("pointlight3", glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(-10.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.5f, &renderingEngine));
-	light4->addComponent(new LightMovementScript());
-	root.addChild(light4);
-
-	/*GameObject* sphere = new GameObject("sphere");
-	sphere->getLocalTransform().translate(glm::vec3(15.0f, 1.0f, 0.0f));
-	sphere->addComponent(MeshRenderer::getMeshRenderer("res/dragonlp.obj", "res/white.png", &renderingEngine, sphere));
-	//sphere->addComponent(new ParentScript());
-	root.addChild(sphere);*/
-
-	/*for (int i = 0; i <= 1; i++)
+	for (int i = 0; i < 250; i++)
 	{
-		GameObject* light = new GameObject("light");
-		light->addComponent(new PointLight("pointlight", glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(i * 5.0f - 25.0f, 1.0f, 0.0f), 0.0f, 0.0f, 0.5f, &renderingEngine));
-		light->addComponent(new ParentScript());
-		root.addChild(light);
-	}
-
-	for (int i = 0; i <= 1; i++)
-	{
-		GameObject* light = new GameObject("light");
-		light->addComponent(new SpotLight("spotlight", glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, i * 5.0f - 25.0f), glm::vec3(1.0f, -1.0f, 0.0f), 0.7f, 0.0f, 0.0f, 0.5f, &renderingEngine));
-		light->addComponent(new ParentScript());
-		root.addChild(light);
-	}*/
-
-	for (int x = -25; x <= 25; x += 5)
-	{
-		for (int z = -25; z <= 25; z += 5)
-		{
-			GameObject* sphere = new GameObject("sphere");
-			sphere->getLocalTransform().translate(glm::vec3((float)x, 1.0f, (float)z));
-			sphere->addComponent(MeshRenderer::getMeshRenderer("res/sphere.obj", "res/white.png", &renderingEngine, sphere));
-			root.addChild(sphere);
-		}
+		float x = glm::sin((float)rand()) * width; 
+		float z = glm::cos((float)rand()) * height;
+		GameObject* tree = new GameObject("Tree" + i);
+		tree->addComponent(MeshRenderer::getMeshRenderer("res/models/tree.obj", "res/textures/treeTexture.png", &renderingEngine, tree));
+		tree->getLocalTransform().setPosition(glm::vec3(x, 0.0f, z));
+		root.addChild(tree);
 	}
 
 	run();
@@ -90,9 +66,6 @@ Engine::~Engine()
 
 void Engine::run()
 {
-	// INITIALIZE THE SCENE
-	root.start();
-
 	float frameStartTime = (float)glfwGetTime();
 	float frameTime = 1.0f / FPS;
 	float unprocessedTime = 0.0f;
@@ -118,7 +91,7 @@ void Engine::run()
 			update(unprocessedTime);
 			//std::cout << "Update: " << glfwGetTime() - startTime << std::endl;
 			startTime = (float)glfwGetTime();
-			render();;
+			render();
 			//std::cout << "Render: " << glfwGetTime() - startTime << std::endl;
 
 			unprocessedTime = 0.0f; // cap to fps limit
@@ -151,4 +124,7 @@ void Engine::update(float deltaTime)
 void Engine::render()
 {
 	renderingEngine.renderScene();
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR)
+		std::cout << error << std::endl;
 }

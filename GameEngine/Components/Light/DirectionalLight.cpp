@@ -2,17 +2,18 @@
 
 /*local includes*/
 #include "../GameObject.h"
-#include "../Shaders/InstanceDirectionalShader.h"
-#include "../Shaders/InstanceDirectionalShadowShader.h"
+#include "../RenderingEngine.h"
 
 DirectionalLight::DirectionalLight(std::string name, glm::vec3 color, float intensity, glm::vec3 direction, RenderingEngine* renderingEngine) : LightComponent(name, color, intensity, renderingEngine, LightComponent::DIRECTIONAL_LIGHT)
 {
 	m_direction = direction;
+	calculateDepthMVP();
 }
 
 
 DirectionalLight::~DirectionalLight()
 {
+	disableShadowCasting();
 }
 
 glm::vec3 DirectionalLight::getDirection()
@@ -25,37 +26,43 @@ void DirectionalLight::setDirection(glm::vec3 direction)
 	m_direction = glm::normalize(direction);
 }
 
-void DirectionalLight::setShadowMap(GLuint map)
+void DirectionalLight::enableShadowCasting(bool useSoftShadows/* = false*/, float shadowSize /*= 20.0f*/, float zNear /*= -20.0f*/, float zFar /*= 20.0f*/)
 {
-	this->m_shadowMap = map;
+	m_castsShadows = true;
+	m_softShadows = useSoftShadows;
+	m_shadowSize = shadowSize;
+	m_shadowZNear = zNear;
+	m_shadowZFar = zFar;	
+
+	m_cullingObject = new FrustumComponent(-shadowSize, shadowSize, -shadowSize, shadowSize, zNear, zFar);
+	m_cullingObject->setParent(m_parent);
+}
+
+void DirectionalLight::disableShadowCasting()
+{
+	m_castsShadows = false;
+
+	if (m_cullingObject != nullptr)
+		delete m_cullingObject;
+
+	m_cullingObject = nullptr;
 }
 
 void DirectionalLight::updateUniforms(Shader* shader)
 {
-	InstanceDirectionalShader* s = (InstanceDirectionalShader*)shader;
-	s->setLightColor(getLight());
-	s->setLightDirection(m_direction);
+	shader->setUniform("lightColor", getLight());
+	shader->setUniform("lightDir", m_direction);
 }
 
-void DirectionalLight::updateShadowUniforms(Shader* shader, glm::vec3 camPosition)
+void DirectionalLight::calculateDepthMVP()
 {
-	if (m_shadowMap == NULL)
-	{
-		updateUniforms(shader);
-		return;
-	}
+	glm::vec3 position = m_renderingEngine->getCamera()->getLocalTransform().position();
+	glm::mat4 depthProjectionMatrix = glm::ortho<float>(-m_shadowSize, m_shadowSize, -m_shadowSize, m_shadowSize, m_shadowZNear, m_shadowZFar);
+	glm::mat4 depthViewMatrix = glm::lookAt(position, position + m_direction, glm::vec3(0.0f, 1.0f, 0.0f));
+	m_depthMVP = depthProjectionMatrix * depthViewMatrix;
+}
 
-	// Compute the MVP matrix from the light's point of view
-	glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10, 10, -10, 10, -10, 20);
-	glm::vec3 position = camPosition + (-m_direction * 10.0f);
-	glm::vec3 direction = position + m_direction;
-	glm::mat4 depthViewMatrix = glm::lookAt(position, direction, glm::vec3(0, 1, 0));
-	glm::mat4 depthModelMatrix = glm::mat4(1.0);
-	glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
-
-	// Send our transformation to the currently bound shader,
-	// in the "MVP" uniform
-	InstanceDirectionalShadowShader* s = (InstanceDirectionalShadowShader*)shader;
-	s->setDepthVP(depthMVP);
-	//glUniformMatrix4fv(s, 1, GL_FALSE, &depthMVP[0][0])
+FrustumComponent* DirectionalLight::getCullingObject()
+{
+	return m_cullingObject;
 }

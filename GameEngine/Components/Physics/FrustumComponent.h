@@ -1,10 +1,10 @@
 #pragma once
 
 /*local includes*/
-#include "ScriptComponent.h"
-#include "../Physics/FrustumComponent.h"
+#include "PhysicsComponent.h"
+#include "SphereComponent.h"
 
-class Camera : public ScriptComponent
+class FrustumComponent : public PhysicsComponent
 {
 private:
 	float m_near, m_far;
@@ -13,11 +13,11 @@ private:
 
 	enum FrustumPlanes
 	{
-		TOP_PLANE, 
+		TOP_PLANE,
 		BOTTOM_PLANE,
 		LEFT_PLANE,
 		RIGHT_PLANE,
-		NEAR_PLANE, 
+		NEAR_PLANE,
 		FAR_PLANE,
 		NUM_PLANES
 	};
@@ -43,23 +43,15 @@ private:
 			return glm::dot(n, point - points[0]);
 		}
 	}; Plane m_planes[NUM_PLANES];
-	bool m_updatePlanes;
 public:
-	Camera(float fov = 70.0f, float zNear = 0.1f, float zFar = 1000.0f);
-	~Camera();
+	FrustumComponent(float left, float right, float bottom, float top, float zNear, float zFar);
+	FrustumComponent(float fov, float zNear, float zFar);
+	~FrustumComponent();
 
-	void update(float deltaTime);
-
-	glm::mat4 getViewMatrix();
-	glm::mat4 getProjectionMatrix();
-	glm::mat4 getVPMatrix();
-	Transform& getLocalTransform();
-
-	bool pointInFrustum(glm::vec3 point);
-	bool sphereInFrustum(glm::vec3 center, float radius);
-	bool boxInFrustum(glm::vec3 min, glm::vec3 max, glm::quat rotation = glm::quat());
-
-private:
+	bool checkCollision(PhysicsComponent* component);
 	void updatePlanes();
+	void start();
+private:
+	bool sphereInFrustum(SphereComponent* sphere);
 };
 

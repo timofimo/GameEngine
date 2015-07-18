@@ -25,21 +25,6 @@ GameObject::~GameObject()
 	m_children.clear();
 }
 
-void GameObject::start()
-{
-	// start all components
-	for each (GameComponent* component in m_components)
-	{
-		component->start();
-	}
-
-	// start the children
-	for each (GameObject* object in m_children)
-	{
-		object->start();
-	}
-}
-
 void GameObject::update(float deltaTime)
 {
 	// update all components
@@ -96,6 +81,7 @@ void GameObject::addComponent(GameComponent* component)
 	}
 
 	component->setParent(this);
+	component->start();
 	m_components.push_back(component);
 }
 
