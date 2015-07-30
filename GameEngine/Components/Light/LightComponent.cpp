@@ -2,36 +2,18 @@
 
 /*local includes*/
 #include "../RenderingEngine.h"
+#include "../GameObjects/GameObject.h"
 
-LightComponent::LightComponent(std::string name, glm::vec3 color, float intensity, RenderingEngine* renderingEngine, LightTypes type) : GameComponent(GameComponent::LIGHT, name)
+LightComponent::LightComponent(std::string name, LightType type) : GameComponent(GameComponent::LIGHT, name)
 {
-	setColor(color);
-	setIntensity(intensity);
-	m_renderingEngine = renderingEngine;
 	m_type = type;
-	m_renderingEngine->addLight(this);
-	m_shadowMapIndex = -1;
+	RenderingEngine::get().addLight(this);
 }
 
 
 LightComponent::~LightComponent()
 {
-	m_renderingEngine->removeLight(this);
-}
-
-glm::vec3 LightComponent::getColor()
-{
-	return m_color;
-}
-
-void LightComponent::setColor(glm::vec3 color)
-{
-	m_color = glm::clamp(color, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(256.0f, 256.0f, 256.0f));
-}
-
-float LightComponent::getIntensity()
-{
-	return m_intensity;
+	RenderingEngine::get().removeLight(this);
 }
 
 void LightComponent::setIntensity(float intensity)
@@ -39,31 +21,45 @@ void LightComponent::setIntensity(float intensity)
 	m_intensity = intensity;
 }
 
+float LightComponent::getIntensity()
+{
+	return m_intensity;
+}
+
+void LightComponent::setColor(glm::vec3 color)
+{
+	m_color = color;
+}
+
+glm::vec3 LightComponent::getColor()
+{
+	return m_color;
+}
+
 glm::vec3 LightComponent::getLight()
 {
 	return m_color * m_intensity;
 }
 
-LightComponent::LightTypes LightComponent::getType()
+LightType LightComponent::getType()
 {
 	return m_type;
 }
 
-glm::mat4 LightComponent::getDepthMVP()
+void LightComponent::enableShadowCasting(bool softShadows /*= false*/)
 {
-	if (m_type == DIRECTIONAL_LIGHT)
-		calculateDepthMVP();
-	return m_depthMVP;
+	m_castsShadows = true;
+	m_castsSoftShadows = softShadows;
 }
 
-glm::mat4 LightComponent::getDepthBias()
+void LightComponent::disableShadowCasting()
 {
-	return biasMatrix * getDepthMVP();
+	m_castsShadows = false;
 }
 
-void LightComponent::setShadowMapIndex(int map)
+void LightComponent::setShadowMapIndex(int index)
 {
-	m_shadowMapIndex = map;
+	m_shadowMapIndex = index;
 }
 
 int LightComponent::getShadowMapIndex()
@@ -71,12 +67,27 @@ int LightComponent::getShadowMapIndex()
 	return m_shadowMapIndex;
 }
 
-bool LightComponent::isShadowCaster()
+bool LightComponent::castsShadows()
 {
 	return m_castsShadows;
 }
 
 bool LightComponent::castsSoftShadows()
 {
-	return m_softShadows;
+	return m_castsSoftShadows;
+}
+
+glm::vec3 LightComponent::getPosition()
+{
+	return m_parent->getWorldTransform(false).position();
+}
+
+glm::vec3 LightComponent::getDirection()
+{
+	return m_parent->getWorldTransform(false).forward();
+}
+
+float LightComponent::getRange(float lightAmount)
+{
+	return FLT_MAX;
 }

@@ -8,6 +8,6 @@
 
 #include "Components/Render/MeshRenderer.h"
 
-#include "Components/Light/DirectionalLight.h"
-#include "Components/Light/PointLight.h"
-#include "Components/Light/SpotLight.h"
+#include "Components/Light/DirectionalLightComponent.h"
+#include "Components/Light/PointLightComponent.h"
+#include "Components/Light/SpotLightComponent.h"

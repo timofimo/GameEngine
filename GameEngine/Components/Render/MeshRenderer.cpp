@@ -3,7 +3,7 @@
 std::map<std::string, MeshRenderer*> MeshRenderer::m_meshRenderers;
 
 #include "../Shaders/Shader.h"
-#include "../GameObject.h"
+#include "../GameObjects/GameObject.h"
 #include "../RenderingEngine.h"
 
 MeshRenderer::MeshRenderer(std::string name, std::string meshFile, std::string textureFile, RenderingEngine* renderingEngine) : RenderComponent(name, renderingEngine)

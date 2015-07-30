@@ -2,7 +2,7 @@
 
 /*local includes*/
 #include "FrustumComponent.h"
-#include "../GameObject.h"
+#include "../GameObjects/GameObject.h"
 
 SphereComponent::SphereComponent(glm::vec3 origin, float range) : PhysicsComponent(PhysicsComponent::SPHERE_COMPONENT, "sphereComponent")
 {

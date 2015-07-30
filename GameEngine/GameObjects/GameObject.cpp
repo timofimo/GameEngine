@@ -1,7 +1,7 @@
 #include "GameObject.h"
 
 /*local includes*/
-#include "Components/Render/RenderComponent.h"
+#include "../Components/Render/RenderComponent.h"
 
 GameObject::GameObject(const std::string name)
 {

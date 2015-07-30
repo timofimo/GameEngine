@@ -2,7 +2,7 @@
 
 /*local includes*/
 #include "../Display.h"
-#include "../GameObject.h"
+#include "../GameObjects/GameObject.h"
 
 FrustumComponent::FrustumComponent(float left, float right, float bottom, float top, float zNear, float zFar) : PhysicsComponent(PhysicsComponent::FRUSTUM_COMPONENT, "frustumComponent")
 {
@@ -32,8 +32,6 @@ FrustumComponent::~FrustumComponent()
 
 bool FrustumComponent::checkCollision(PhysicsComponent* component)
 {
-	//if (m_parent->getWorldTransform(false).hasChanged(false))
-	//	updatePlanes();
 	switch (component->getType())
 	{
 	case PhysicsComponentType::SPHERE_COMPONENT:
@@ -43,20 +41,22 @@ bool FrustumComponent::checkCollision(PhysicsComponent* component)
 	}
 }
 
-void FrustumComponent::updatePlanes()
+void FrustumComponent::updatePlanes(Transform* transform/* = nullptr*/)
 {
-	Transform t = m_parent->getWorldTransform(false);
-	glm::vec3 centerFar = t.position() + t.forward() * m_far;
-	glm::vec3 ftl = centerFar + (t.up() * m_heightFar / 2.0f) - (t.right() * m_widthFar / 2.0f); // far top left
-	glm::vec3 ftr = centerFar + (t.up() * m_heightFar / 2.0f) + (t.right() * m_widthFar / 2.0f); // far top right
-	glm::vec3 fbl = centerFar - (t.up() * m_heightFar / 2.0f) - (t.right() * m_widthFar / 2.0f); // far bottom left
-	glm::vec3 fbr = centerFar - (t.up() * m_heightFar / 2.0f) + (t.right() * m_widthFar / 2.0f); // far bottom right
+	Transform* t = transform;
+	if(t == nullptr)
+		t = &m_parent->getWorldTransform(false);
+	glm::vec3 centerFar = t->position() + t->forward() * m_far;
+	glm::vec3 ftl = centerFar + (t->up() * m_heightFar / 2.0f) - (t->right() * m_widthFar / 2.0f); // far top left
+	glm::vec3 ftr = centerFar + (t->up() * m_heightFar / 2.0f) + (t->right() * m_widthFar / 2.0f); // far top right
+	glm::vec3 fbl = centerFar - (t->up() * m_heightFar / 2.0f) - (t->right() * m_widthFar / 2.0f); // far bottom left
+	glm::vec3 fbr = centerFar - (t->up() * m_heightFar / 2.0f) + (t->right() * m_widthFar / 2.0f); // far bottom right
 
-	glm::vec3 centerNear = t.position() + t.forward() * m_near;
-	glm::vec3 ntl = centerNear + (t.up() * m_heightNear / 2.0f) - (t.right() * m_widthNear / 2.0f); // near top left
-	glm::vec3 ntr = centerNear + (t.up() * m_heightNear / 2.0f) + (t.right() * m_widthNear / 2.0f); // near top right
-	glm::vec3 nbl = centerNear - (t.up() * m_heightNear / 2.0f) - (t.right() * m_widthNear / 2.0f); // near bottom left
-	glm::vec3 nbr = centerNear - (t.up() * m_heightNear / 2.0f) + (t.right() * m_widthNear / 2.0f); // near bottom right
+	glm::vec3 centerNear = t->position() + t->forward() * m_near;
+	glm::vec3 ntl = centerNear + (t->up() * m_heightNear / 2.0f) - (t->right() * m_widthNear / 2.0f); // near top left
+	glm::vec3 ntr = centerNear + (t->up() * m_heightNear / 2.0f) + (t->right() * m_widthNear / 2.0f); // near top right
+	glm::vec3 nbl = centerNear - (t->up() * m_heightNear / 2.0f) - (t->right() * m_widthNear / 2.0f); // near bottom left
+	glm::vec3 nbr = centerNear - (t->up() * m_heightNear / 2.0f) + (t->right() * m_widthNear / 2.0f); // near bottom right
 
 	m_planes[TOP_PLANE].setPoints(ntr, ntl, ftl);
 	m_planes[BOTTOM_PLANE].setPoints(nbl, nbr, fbr);

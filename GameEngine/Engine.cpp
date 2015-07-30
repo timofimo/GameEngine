@@ -1,8 +1,10 @@
 #include "Engine.h"
 
 #include "Components.h"
+#include "GameObjects/DirectionalLight.h"
+#include "GameObjects/SpotLight.h"
 
-#define FPS 60.0f
+#define FPS 6000.0f
 
 Engine::Engine() : root("Root")
 {
@@ -20,38 +22,37 @@ Engine::Engine() : root("Root")
 	camera->getLocalTransform().setPosition(glm::vec3(-3.0f, 1.0f, 0.0f));
 	camera->getLocalTransform().setRotation(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f)));
 	Camera* camComponent = new Camera();
-	renderingEngine.setCamera(camComponent);
+	RenderingEngine::get().setCamera(camComponent);
 	camera->addComponent(camComponent);
 	root.addChild(camera);
 
 	GameObject* sphere = new GameObject("sphere");
-	sphere->addComponent(MeshRenderer::getMeshRenderer("res/models/sphere.obj", "res/textures/white.png", &renderingEngine, sphere));
+	sphere->addComponent(MeshRenderer::getMeshRenderer("res/models/sphere.obj", "res/textures/white.png", &RenderingEngine::get(), sphere));
 	sphere->getLocalTransform().setPosition(glm::vec3(0.0f, 1.0f, 0.0f));
 	root.addChild(sphere);
 
-	GameObject* sun = new GameObject("sun");
-	sun->addComponent(new DirectionalLight("sunLight", glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(1.0f, -2.0f, 0.0f), &renderingEngine));
-	((DirectionalLight*)sun->getComponent("sunLight"))->enableShadowCasting(false, 250.0f);
-	root.addChild(sun);
+	DirectionalLight* dl = new DirectionalLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, true, 40.0f, -40.0f, 40.0f);
+	dl->getLocalTransform().setRotation(glm::radians(glm::vec3(-40.0f, 0.0f, 0.0f)));
+	dl->addComponent(new ParentScript());
+	root.addChild(dl);
 
-	GameObject* spot = new GameObject("spot");
-	spot->addComponent(new SpotLight("spot", glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, -5.0f), glm::vec3(0.0f, 0.0f, 1.0f), 0.95f, 0.0f, 0.0f, 0.01f, &renderingEngine));
-	((SpotLight*)spot->getComponent("spot"))->enableShadowCasting();
-	root.addChild(spot);
+	/*SpotLight* sl = new SpotLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, 0.7f, 0.01f, glm::vec3(0.0f, 0.1f, 0.0f), glm::radians(glm::vec3(0.0f, 180.0f, 0.0f)), true);
+	sl->addComponent(new LightMovementScript());
+	root.addChild(sl);*/
 
-	float width = 100.0f;
-	float height = 100.0f;
+	float width = 200.0f;
+	float height = 200.0f;
 	GameObject* plane = new GameObject("Plane");
 	plane->getLocalTransform().setScale(glm::vec3(width, 1.0f, height));
-	plane->addComponent(MeshRenderer::getMeshRenderer("res/models/plane.obj", "res/textures/ground.png", &renderingEngine, plane));
+	plane->addComponent(MeshRenderer::getMeshRenderer("res/models/plane.obj", "res/textures/ground.png", &RenderingEngine::get(), plane));
 	root.addChild(plane);
 
-	for (int i = 0; i < 250; i++)
+	for (int i = 0; i < 1250; i++)
 	{
 		float x = glm::sin((float)rand()) * width; 
 		float z = glm::cos((float)rand()) * height;
 		GameObject* tree = new GameObject("Tree" + i);
-		tree->addComponent(MeshRenderer::getMeshRenderer("res/models/tree.obj", "res/textures/treeTexture.png", &renderingEngine, tree));
+		tree->addComponent(MeshRenderer::getMeshRenderer("res/models/tree.obj", "res/textures/treeTexture.png", &RenderingEngine::get(), tree));
 		tree->getLocalTransform().setPosition(glm::vec3(x, 0.0f, z));
 		root.addChild(tree);
 	}
@@ -76,7 +77,7 @@ void Engine::run()
 	Input::initialize();
 	Input::setMouseMode(GLFW_CURSOR_DISABLED);
 
-	while (!renderingEngine.windowShouldClose())
+	while (!RenderingEngine::get().windowShouldClose())
 	{
 		float frameEndTime = (float)glfwGetTime();
 		float timePassed = frameEndTime - frameStartTime;
@@ -123,7 +124,7 @@ void Engine::update(float deltaTime)
 
 void Engine::render()
 {
-	renderingEngine.renderScene();
+	RenderingEngine::get().renderScene();
 	GLenum error = glGetError();
 	if (error != GL_NO_ERROR)
 		std::cout << error << std::endl;

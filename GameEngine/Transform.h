@@ -29,15 +29,15 @@ public:
 	glm::quat rotationQ();
 	glm::mat4 modelMatrix();
 
-	void setPosition(const glm::vec3 pos);
-	void setScale(const glm::vec3 scl);
-	void setRotation(const glm::vec3 rot);
-	void setRotation(const glm::quat rot);
+	Transform* setPosition(const glm::vec3 pos);
+	Transform* setScale(const glm::vec3 scl);
+	Transform* setRotation(const glm::vec3 rot);
+	Transform* setRotation(const glm::quat rot);
 
-	void translate(const glm::vec3 amount);
-	void resize(const glm::vec3 amount);
-	void rotate(const glm::vec3 amount);
-	void rotate(const glm::quat amount);
+	Transform* translate(const glm::vec3 amount);
+	Transform* resize(const glm::vec3 amount);
+	Transform* rotate(const glm::vec3 amount);
+	Transform* rotate(const glm::quat amount);
 
 	glm::vec3 forward();
 	glm::vec3 right();

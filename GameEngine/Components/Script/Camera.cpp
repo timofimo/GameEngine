@@ -3,7 +3,7 @@
 /*local includes*/
 #include "../Display.h"
 #include "../Shaders/Shader.h"
-#include "../GameObject.h"
+#include "../GameObjects/GameObject.h"
 
 Camera::Camera(float fov, float zNear, float zFar) : ScriptComponent("Camera")
 {

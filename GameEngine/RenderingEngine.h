@@ -3,7 +3,7 @@
 #define MAX_SHADOWS 3
 
 /*local includes*/
-#include "GameObject.h"
+#include "GameObjects/GameObject.h"
 #include "Shaders/Shader.h"
 #include "Components.h"
 #include "FrameBuffer.h"
@@ -12,9 +12,9 @@ class RenderingEngine
 {
 private:
 	std::vector<MeshRenderer*> m_meshRenderers;
-	std::vector<DirectionalLight*> m_directionalLights;
-	std::vector<PointLight*> m_pointLights;
-	std::vector<SpotLight*> m_spotLights;
+	std::vector<DirectionalLightComponent*> m_directionalLights;
+	std::vector<PointLightComponent*> m_pointLights;
+	std::vector<SpotLightComponent*> m_spotLights;
 
 	Display m_display;
 	enum Shaders
@@ -37,6 +37,8 @@ public:
 	RenderingEngine();
 	~RenderingEngine();
 
+	static RenderingEngine& get();
+
 	void renderScene();
 
 	void setCamera(Camera* cam);
@@ -54,7 +56,7 @@ public:
 	float getAmbientIntensity();
 
 private:
-	void renderInstanced(MeshRenderer* meshRenderer, GLuint ModelMatrixID, PointLight* rangedLight = nullptr);
+	void renderInstanced(MeshRenderer* meshRenderer, GLuint ModelMatrixID, LightComponent* rangedLight = nullptr);
 	void renderShadowMapInstanced(MeshRenderer* meshRenderer, GLuint ModelMatrixID, LightComponent* light);
 
 	std::vector<LightComponent*> getClosestLights(glm::vec3 point);

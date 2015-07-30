@@ -1,59 +1,65 @@
 #pragma once
 
-class RenderingEngine;
-
 /*local includes*/
 #include "../GameComponent.h"
+#include "../Components/Physics/PhysicsComponent.h"
 
+enum LightType
+{
+	DIRECTIONAL_LIGHT,
+	SPOT_LIGHT,
+	POINT_LIGHT
+};
 
 class LightComponent : public GameComponent
 {
-public:
-	enum LightTypes
-	{
-		DIRECTIONAL_LIGHT,
-		SPOT_LIGHT,
-		POINT_LIGHT,
-	}; LightTypes m_type;
 protected:
-	RenderingEngine* m_renderingEngine;
-	glm::vec3 m_color;
 	float m_intensity;
+	glm::vec3 m_color;
+	LightType m_type;
 
-	glm::mat4 m_depthMVP;
-	glm::mat4 biasMatrix = glm::mat4(
+	bool m_castsShadows;
+	bool m_castsSoftShadows;
+	int m_shadowMapIndex;
+
+	glm::mat4 m_shadowBiasMatrix = glm::mat4(
 		0.5, 0.0, 0.0, 0.0,
 		0.0, 0.5, 0.0, 0.0,
 		0.0, 0.0, 0.5, 0.0,
 		0.5, 0.5, 0.5, 1.0
 		);
-	int m_shadowMapIndex;
-	bool m_castsShadows, m_softShadows;
-	virtual void calculateDepthMVP() = 0;
-
 public:
-	LightComponent(std::string name, glm::vec3 color, float intensity, RenderingEngine* renderingEngine, LightTypes type);
+	LightComponent(std::string name, LightType type);
 	virtual ~LightComponent();
 
-	glm::vec3 getColor();
-	void setColor(glm::vec3 color);
-	float getIntensity();
 	void setIntensity(float intensity);
+	float getIntensity();
+
+	void setColor(glm::vec3 color);
+	glm::vec3 getColor();
 	glm::vec3 getLight();
-	LightTypes getType();
+	LightType getType();
 
-	virtual void updateUniforms(Shader* shader) = 0;
+	virtual void enableShadowCasting(bool softShadows = false);
+	virtual void disableShadowCasting();
 
-	glm::mat4 getDepthMVP();
-	glm::mat4 getDepthBias();
-	void setShadowMapIndex(int map);
+	void setShadowMapIndex(int index);
 	int getShadowMapIndex();
 
-	bool isShadowCaster();
+	bool castsShadows();
 	bool castsSoftShadows();
 
+	virtual glm::mat4 getShadowMVP() = 0;
+
+	virtual glm::vec3 getPosition();
+	virtual glm::vec3 getDirection();
+	virtual float getRange(float lightAmount);
+
+	virtual PhysicsComponent* getCullingObject() = 0;
+
+	virtual void updateUniforms(Shader* shader, bool updateShadowUniforms) = 0;
 private:
 	void start(){}
-	void update(float deltaTime){}
+	void update(float deltaTime){};
 };
 

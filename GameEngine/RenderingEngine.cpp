@@ -31,18 +31,23 @@ RenderingEngine::~RenderingEngine()
 {
 }
 
+RenderingEngine& RenderingEngine::get()
+{
+	static RenderingEngine renderingEngine;
+	return renderingEngine;
+}
+
 void RenderingEngine::renderScene()
 {
 	std::vector<LightComponent*> closestLights = getClosestLights(m_activeCamera->getLocalTransform().position());
 	int index = 0;
+	m_activeShader = m_shaders[SHADOWMAP_SHADER];
+	m_activeShader->bind();
 	for each(LightComponent* light in closestLights)
 	{
 		m_shadowFrameBuffer[index]->bindAsRenderTarget();
 
-		m_activeShader = m_shaders[AMBIENT_SHADER];
-		m_activeShader->bind();
-
-		m_activeShader->setUniform("VPMatrix", light->getDepthMVP());
+		m_activeShader->setUniform("VPMatrix", light->getShadowMVP());
 		
 		glFrontFace(GL_CW);
 		for each (MeshRenderer* mr in m_meshRenderers)
@@ -88,16 +93,13 @@ void RenderingEngine::renderScene()
 	//directional pass
 	m_activeShader = m_shaders[DIRECTIONAL_SHADER];
 	m_activeShader->bind();
-	for each (DirectionalLight* light in m_directionalLights)
+	for each (DirectionalLightComponent* light in m_directionalLights)
 	{
 		if (light->getShadowMapIndex() != -1)
 		{
 			m_activeShader = m_shaders[SHADOW_DIRECTIONAL_SHADER];
 			m_activeShader->bind();
-			light->updateUniforms(m_activeShader);
-			m_activeShader->setUniform("depthBiasMVP", light->getDepthBias());
-			m_activeShader->setSamplerID("shadowMap", 1);
-			m_activeShader->setUniform("softShadow", light->castsSoftShadows());
+			light->updateUniforms(m_activeShader, true);
 			m_shadowFrameBuffer[light->getShadowMapIndex()]->bindTexture(0, 1);
 
 			for each (MeshRenderer* mr in m_meshRenderers)
@@ -111,7 +113,7 @@ void RenderingEngine::renderScene()
 		}
 		else
 		{
-			light->updateUniforms(m_activeShader);
+			light->updateUniforms(m_activeShader, false);
 
 			for each (MeshRenderer* mr in m_meshRenderers)
 			{
@@ -124,9 +126,9 @@ void RenderingEngine::renderScene()
 	m_activeShader = m_shaders[POINT_SHADER];
 	m_activeShader->bind();
 	
-	for each (PointLight* light in m_pointLights)
+	for each (PointLightComponent* light in m_pointLights)
 	{
-		light->updateUniforms(m_activeShader);
+		light->updateUniforms(m_activeShader, false);
 
 		for each (MeshRenderer* mr in m_meshRenderers)
 		{
@@ -137,16 +139,13 @@ void RenderingEngine::renderScene()
 	//spot pass
 	m_activeShader = m_shaders[SPOT_SHADER];
 	m_activeShader->bind();
-	for each (SpotLight* light in m_spotLights)
+	for each (SpotLightComponent* light in m_spotLights)
 	{
 		if (light->getShadowMapIndex() != -1)
 		{
 			m_activeShader = m_shaders[SHADOW_SPOT_SHADER];
 			m_activeShader->bind();
-			light->updateUniforms(m_activeShader);
-			m_activeShader->setUniform("depthBiasMVP", light->getDepthBias());
-			m_activeShader->setSamplerID("shadowMap", 1);
-			m_activeShader->setUniform("softShadow", light->castsSoftShadows());
+			light->updateUniforms(m_activeShader, true);
 			m_shadowFrameBuffer[light->getShadowMapIndex()]->bindTexture(0, 1);
 
 			for each (MeshRenderer* mr in m_meshRenderers)
@@ -160,7 +159,7 @@ void RenderingEngine::renderScene()
 		}
 		else
 		{
-			light->updateUniforms(m_activeShader);
+			light->updateUniforms(m_activeShader, false);
 
 			for each (MeshRenderer* mr in m_meshRenderers)
 			{
@@ -210,17 +209,17 @@ void RenderingEngine::removeMeshRenderer(MeshRenderer* meshRenderer)
 
 void RenderingEngine::addLight(LightComponent* light)
 {
-	LightComponent::LightTypes type = light->getType();
+	LightType type = light->getType();
 	switch (type)
 	{
-	case LightComponent::DIRECTIONAL_LIGHT:
-		m_directionalLights.push_back((DirectionalLight*)light);
+	case DIRECTIONAL_LIGHT:
+		m_directionalLights.push_back((DirectionalLightComponent*)light);
 		break;
-	case LightComponent::SPOT_LIGHT:
-		m_spotLights.push_back((SpotLight*)light);
+	case SPOT_LIGHT:
+		m_spotLights.push_back((SpotLightComponent*)light);
 		break;
-	case LightComponent::POINT_LIGHT:
-		m_pointLights.push_back((SpotLight*)light);
+	case POINT_LIGHT:
+		m_pointLights.push_back((PointLightComponent*)light);
 		break;
 	default:
 		break;
@@ -229,26 +228,26 @@ void RenderingEngine::addLight(LightComponent* light)
 
 void RenderingEngine::removeLight(LightComponent* light)
 {
-	LightComponent::LightTypes type = light->getType();
-	if (type == LightComponent::DIRECTIONAL_LIGHT)
+	LightType type = light->getType();
+	if (type == DIRECTIONAL_LIGHT)
 	{
-		std::vector<DirectionalLight*>::iterator it = std::find(m_directionalLights.begin(), m_directionalLights.end(), light);
+		std::vector<DirectionalLightComponent*>::iterator it = std::find(m_directionalLights.begin(), m_directionalLights.end(), light);
 		if (it == m_directionalLights.end())
 			std::cout << "ERROR RENDERINGENGINE: tried to delete a light that doesn't exist" << std::endl;
 		else
 			m_directionalLights.erase(it);
 	}
-	else if (type == LightComponent::POINT_LIGHT)
+	else if (type == POINT_LIGHT)
 	{
-		std::vector<PointLight*>::iterator it = std::find(m_pointLights.begin(), m_pointLights.end(), light);
+		std::vector<PointLightComponent*>::iterator it = std::find(m_pointLights.begin(), m_pointLights.end(), light);
 		if (it == m_pointLights.end())
 			std::cout << "ERROR RENDERINGENGINE: tried to delete a light that doesn't exist" << std::endl;
 		else
 			m_pointLights.erase(it);
 	}
-	else if (type == LightComponent::SPOT_LIGHT)
+	else if (type == SPOT_LIGHT)
 	{
-		std::vector<SpotLight*>::iterator it = std::find(m_spotLights.begin(), m_spotLights.end(), light);
+		std::vector<SpotLightComponent*>::iterator it = std::find(m_spotLights.begin(), m_spotLights.end(), light);
 		if (it == m_spotLights.end())
 			std::cout << "ERROR RENDERINGENGINE: tried to delete a light that doesn't exist" << std::endl;
 		else
@@ -266,7 +265,7 @@ float RenderingEngine::getAmbientIntensity()
 	return glm::max(AMBIENT_COLOR.r, glm::max(AMBIENT_COLOR.g, AMBIENT_COLOR.b));
 }
 
-void RenderingEngine::renderInstanced(MeshRenderer* meshRenderer, GLuint ModelMatrixID, PointLight* rangedLight/* = nullptr*/)
+void RenderingEngine::renderInstanced(MeshRenderer* meshRenderer, GLuint ModelMatrixID, LightComponent* rangedLight/* = nullptr*/)
 {
 	//double startTime = glfwGetTime();
 	std::vector<glm::mat4> instanceMatrices;	
@@ -309,10 +308,7 @@ void RenderingEngine::renderShadowMapInstanced(MeshRenderer* meshRenderer, GLuin
 
 	PhysicsComponent* cullingObject = 0;
 
-	if (light->getType() == LightComponent::DIRECTIONAL_LIGHT)
-		cullingObject = ((DirectionalLight*)light)->getCullingObject();
-	else if (light->getType() == LightComponent::SPOT_LIGHT)
-		cullingObject = ((SpotLight*)light)->getCullingObject();
+	cullingObject = light->getCullingObject();
 
 	std::vector<glm::mat4> instanceMatrices;
 	for each (GameObject* parent in meshRenderer->getParents())
@@ -320,13 +316,13 @@ void RenderingEngine::renderShadowMapInstanced(MeshRenderer* meshRenderer, GLuin
 		Transform t = parent->getWorldTransform(false);
 
 		SphereComponent boundingSphere = SphereComponent(meshRenderer->getMesh()->getBoundingSphereCenter() + t.position(), meshRenderer->getMesh()->getRadius() * t.scalef());
-		if (cullingObject->checkCollision(&boundingSphere))
+		if (cullingObject == nullptr || cullingObject->checkCollision(&boundingSphere))
 		{
 			instanceMatrices.push_back(parent->getWorldTransform(false).modelMatrix());
 		}
 	}
+	//std::cout << light->getType() << ": " << instanceMatrices.size() << std::endl;
 	//std::cout << meshRenderer->getName().c_str() << ": " << glfwGetTime() - startTime << std::endl;
-	std::cout << light->getType() << ": " << instanceMatrices.size() << std::endl;
 	if (instanceMatrices.size() > 0)
 	{
 		meshRenderer->getMesh()->bind();
@@ -345,7 +341,7 @@ std::vector<LightComponent*> RenderingEngine::getClosestLights(glm::vec3 point)
 	std::vector<LightComponent*> closestLights;
 	for each (LightComponent* l in m_directionalLights)
 	{
-		if (l->isShadowCaster())
+		if (l->castsShadows())
 		{
 			closestLights.push_back(l);
 			if (closestLights.size() >= maxShadowMappedLights)
@@ -353,16 +349,16 @@ std::vector<LightComponent*> RenderingEngine::getClosestLights(glm::vec3 point)
 		}
 	}
 
-	for each (SpotLight* l in m_spotLights)
+	for each (SpotLightComponent* l in m_spotLights)
 	{
-		if (l->isShadowCaster())
+		if (l->castsShadows())
 		{
 			int index = 0;
 			float distance = glm::distance(l->getPosition(), point);
 			bool lightAdded = false;
 			for each (LightComponent* cl in closestLights)
 			{
-				float distance2 = cl->getType() == LightComponent::DIRECTIONAL_LIGHT ? 0.0f : glm::distance(((SpotLight*)cl)->getPosition(), point);
+				float distance2 = cl->getType() == DIRECTIONAL_LIGHT ? 0.0f : glm::distance(cl->getPosition(), point);
 				if (distance < distance2)
 				{
 					closestLights.insert(closestLights.begin() + index, l);

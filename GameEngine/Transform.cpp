@@ -93,56 +93,72 @@ glm::mat4 Transform::modelMatrix()
 		return m_worldMatrix;
 }
 
-void Transform::setPosition(const glm::vec3 pos)
+Transform* Transform::setPosition(const glm::vec3 pos)
 {
 	m_hasChanged = true;
 	m_pos = pos;
+
+	return this;
 }
 
-void Transform::setScale(const glm::vec3 scl)
+Transform* Transform::setScale(const glm::vec3 scl)
 {
 	m_hasChanged = true;
 	m_scl = scl;
+
+	return this;
 }
 
-void Transform::setRotation(const glm::vec3 rot)
+Transform* Transform::setRotation(const glm::vec3 rot)
 {
 	m_hasChanged = true;
 	m_rot = rot;
 	m_qrot = glm::quat(rot);
+
+	return this;
 }
 
-void Transform::setRotation(const glm::quat rot)
+Transform* Transform::setRotation(const glm::quat rot)
 {
 	m_hasChanged = true;
 	m_qrot = rot;
 	m_rot = glm::eulerAngles(m_qrot);
+
+	return this;
 }
 
-void Transform::translate(const glm::vec3 amount)
+Transform* Transform::translate(const glm::vec3 amount)
 {
 	m_hasChanged = true;
 	m_pos += amount;
+
+	return this;
 }
 
-void Transform::resize(const glm::vec3 amount)
+Transform* Transform::resize(const glm::vec3 amount)
 {
 	m_hasChanged = true;
 	m_scl *= amount;
+
+	return this;
 }
 
-void Transform::rotate(const glm::vec3 amount)
+Transform* Transform::rotate(const glm::vec3 amount)
 {
 	m_hasChanged = true;
 	m_rot += amount;
 	m_qrot = glm::quat(m_rot);
+
+	return this;
 }
 
-void Transform::rotate(const glm::quat amount)
+Transform* Transform::rotate(const glm::quat amount)
 {
 	m_hasChanged = true;
 	m_qrot = amount * m_qrot;
 	m_rot = glm::eulerAngles(m_qrot);
+
+	return this;
 }
 
 glm::vec3 Transform::forward()

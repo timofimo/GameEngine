@@ -49,7 +49,7 @@ public:
 	~FrustumComponent();
 
 	bool checkCollision(PhysicsComponent* component);
-	void updatePlanes();
+	void updatePlanes(Transform* transform = nullptr);
 	void start();
 private:
 	bool sphereInFrustum(SphereComponent* sphere);

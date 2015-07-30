@@ -1,9 +1,9 @@
 #pragma once
 
 /*local includes*/
-#include "Transform.h"
-#include "Components/GameComponent.h"
-#include "Shaders/Shader.h"
+#include "../Transform.h"
+#include "../Components/GameComponent.h"
+#include "../Shaders/Shader.h"
 
 /*utility includes*/
 #include <vector>

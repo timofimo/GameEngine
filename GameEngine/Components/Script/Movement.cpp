@@ -1,7 +1,7 @@
 #include "Movement.h"
 
 /*local includes*/
-#include "../GameObject.h"
+#include "../GameObjects/GameObject.h"
 
 Movement::Movement() : ScriptComponent("Movement")
 {
